@@ -172,3 +172,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Visual Code (vcode)
+/.vscode
+
+# My personal scratch place that I use to add code, notes that I never want commited
+__scratch
+
+# Mac
+.DS_Store

@@ -1,0 +1,53 @@
+name: CI/CD Docker Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # запуск при push в основную ветку
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push rostov-bot image
+        working-directory: ./rostov-bot
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:latest
+
+      - name: Build and push metar-bot image
+        working-directory: ./metar-bot
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+      - name: Copy docker-compose.yaml to server
+        run: |
+          scp -o StrictHostKeyChecking=no -P ${{ secrets.SSH_PORT }} ./docker-compose.yaml ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/srv/urrv-bot
+
+      - name: SSH to server and deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no -P ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /srv/urrv-bot
+            export DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}"
+            export DISCORD_ANNOUNCEMENT_CHANNEL_ID="${{ secrets.DISCORD_ANNOUNCEMENT_CHANNEL_ID }}"
+            export DISCORD_WELCOME_CHANNEL_ID="${{ secrets.DISCORD_WELCOME_CHANNEL_ID }}"
+            export DISCORD_ATO_NEWS_CHANNEL_ID="${{ secrets.DISCORD_ATO_NEWS_CHANNEL_ID }}"
+            docker-compose down
+            docker-compose up -d
+          EOF
