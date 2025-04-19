@@ -2,8 +2,8 @@ name: CI/CD Docker Build and Deploy
 
 on:
   push:
-    branches:
-      - main  # запуск при push в основную ветку
+    tags:
+      - 'v*'
 
 jobs:
   build-and-deploy:
@@ -19,17 +19,27 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get version from tag
+        id: get_tag
+        run: |
+          VERSION=$(git describe --tags --match 'v*' --exact-match 2>/dev/null || echo "latest")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Build and push rostov-bot image
         working-directory: ./rostov-bot
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:${{ github.ref_name }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:${{ github.ref_name }}
 
       - name: Build and push metar-bot image
         working-directory: ./metar-bot
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/metar-bot:${{ github.ref_name }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:${{ github.ref_name }}      
+
+      - name: Insert version to docker-compose
+        run: |
+          sed "s/\${VERSION}/${{ github.ref_name }}/g" docker-compose.template.yaml > docker-compose.yaml
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
