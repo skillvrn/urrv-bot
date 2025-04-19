@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  rostov-bot:
+  rostov_bot:
     image: skillvrn/rostov-bot:latest
     environment:
       DISCORD_ANNOUNCEMENT_CHANNEL_ID: ${DISCORD_ANNOUNCEMENT_CHANNEL_ID}
@@ -9,7 +9,7 @@ services:
       DISCORD_ATO_NEWS_CHANNEL_ID: ${DISCORD_ATO_NEWS_CHANNEL_ID}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
 
-  metar-bot:
+  metar_bot:
     image: skillvrn/metar-bot:latest
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
