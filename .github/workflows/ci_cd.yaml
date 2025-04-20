@@ -88,17 +88,17 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-  push-image:
+  push-images:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    needs: scan-image
+    needs: scan-images
     steps:
       - name: Push Docker images
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest
 
-  build-and-deploy:
+  deploy:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
