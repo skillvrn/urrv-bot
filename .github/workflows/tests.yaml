@@ -2,9 +2,8 @@ name: Lint, Detect, Test Build
 
 on:
   push:
-    # Все ветки, кроме main и тегов
-    branches:
-      - '**'
+    branches-ignore:
+      - main
 
 jobs:
   lint:
