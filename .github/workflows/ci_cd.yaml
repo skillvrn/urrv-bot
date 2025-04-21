@@ -1,14 +1,6 @@
 name: CI/CD of URRV-BOT
 
-on:
-  push:
-    branches:
-      - '**'
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - main
+on: push
 
 env:
   PYTHON_VERSION: '3.13'
@@ -87,7 +79,7 @@ jobs:
 
   build-push-docker:
     name: Build and push docker
-    if: github.event.pull_request && github.event.pull_request.merged == true
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
