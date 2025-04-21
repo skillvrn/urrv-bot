@@ -2,8 +2,8 @@ name: CI/CD of URRV-BOT
 
 on:
   push:
-    branches-ignore:
-      - main
+    branches:
+      - '**'
     tags:
       - 'v*'
   pull_request:
@@ -87,7 +87,7 @@ jobs:
 
   build-push-docker:
     name: Build and push docker
-    if: github.ref == 'refs/heads/main'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
