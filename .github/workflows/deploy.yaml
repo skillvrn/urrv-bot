@@ -29,7 +29,10 @@ jobs:
           docker tag ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
 
-      - name: Insert version to docker-compose
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Insert version into docker-compose
         run: |
           sed "s/\${VERSION}/$TAG_VERSION/g" docker-compose.template.yaml > docker-compose.yaml
 
