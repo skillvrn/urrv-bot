@@ -33,6 +33,9 @@ bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
 @bot.event
 async def on_ready():
     print(f"Бот {bot.user.name} подключен!")
+    print(f"ANNOUNCEMENT_CHANNEL_ID: {ANNOUNCEMENT_CHANNEL_ID}")
+    print(f"WELCOME_CHANNEL_ID: {WELCOME_CHANNEL_ID}")
+    print(f"ATO_NEWS_CHANNEL_ID: {ATO_NEWS_CHANNEL_ID}")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="за сервером"))
     check_and_send_weekly_flight_announcement.start()
 
