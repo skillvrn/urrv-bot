@@ -86,7 +86,7 @@ jobs:
       #     severity: 'CRITICAL,HIGH'
 
   build-push-docker:
-    name: Build and push docker images
+    name: Build and push docker
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
