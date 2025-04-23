@@ -28,6 +28,9 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest
           docker tag ${{ secrets.DOCKER_USERNAME }}/metar-bot:latest ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
+          docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest
+          docker tag ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
+          docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -53,6 +56,9 @@ jobs:
             export DISCORD_ANNOUNCEMENT_CHANNEL_ID="${{ secrets.DISCORD_ANNOUNCEMENT_CHANNEL_ID }}"
             export DISCORD_WELCOME_CHANNEL_ID="${{ secrets.DISCORD_WELCOME_CHANNEL_ID }}"
             export DISCORD_ATO_NEWS_CHANNEL_ID="${{ secrets.DISCORD_ATO_NEWS_CHANNEL_ID }}"
+            export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ secrets.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
+            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ FLIGHT_ANNOUNCE_IMAGE_URL }}"
+            export XR_SITE_URL="${{ XR_SITE_URL }}"
             docker-compose down
             docker-compose up -d
           EOF

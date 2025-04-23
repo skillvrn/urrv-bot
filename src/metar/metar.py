@@ -7,7 +7,7 @@ import os
 
 # Create the bot instance (assuming you've already done this)
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 
 # Regular expression for valid ICAO code (4 letters)
 ICAO_REGEX = r"^[A-Z]{4}$"

@@ -52,14 +52,19 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build rostov-bot image
-        working-directory: ./rostov-bot
+        working-directory: ./src/rostov
         run: |
           docker build -t rostov-bot:latest .
       
       - name: Build metar-bot image
-        working-directory: ./metar-bot
+        working-directory: ./src/metar
         run: |
           docker build -t metar-bot:latest .
+      
+      - name: Build atc-bot image
+        working-directory: ./src/atc
+        run: |
+          docker build -t atc-bot:latest .
       
       # - name: Scan Docker image rostov-bot for vulnerabilities
       #   uses: aquasecurity/trivy-action@master
@@ -74,6 +79,15 @@ jobs:
       #   uses: aquasecurity/trivy-action@master
       #   with:
       #     image-ref: metar-bot:latest
+      #     format: 'table'
+      #     exit-code: '1'
+      #     ignore-unfixed: true
+      #     severity: 'CRITICAL,HIGH'
+
+      # - name: Scan Docker image atc-bot for vulnerabilities
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: atc-bot:latest
       #     format: 'table'
       #     exit-code: '1'
       #     ignore-unfixed: true

@@ -6,22 +6,23 @@ import re  # Для регулярных выражений
 import asyncio  # Для асинхронных задач (например, мута)
 import datetime  # Для работы с датами и временем
 import requests
+import math
 import xml.etree.ElementTree as ET
+import aiohttp
+from bs4 import BeautifulSoup
 
 # --- Настройки ---
-BOT_PREFIX = "!"
-ANNOUNCEMENT_CHANNEL_ID = os.getenv('DISCORD_ANNOUNCEMENT_CHANNEL_ID')
+BOT_PREFIX = "/"
 WELCOME_CHANNEL_ID = os.getenv('DISCORD_WELCOME_CHANNEL_ID')
 ATO_NEWS_CHANNEL_ID = os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID')
-ROLES_TO_MENTION = ["Курсанты"]
+ANNOUNCEMENT_EMOJI = "📢"
+ROLES_TO_MENTION = ["@Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
-FLIGHT_ANNOUNCE_IMAGE_URL = "https://media.discordapp.net/attachments/1274246245967200313/1361762541436407899/image.png?ex=67ffefb2&is=67fe9e32&hm=b1152df005c0aa0ca39c0e38bb382e583188be746aa4ebae2186ea20ad6af777&=&format=webp&quality=lossless"
+FLIGHT_ANNOUNCE_IMAGE_URL = os.getenv('FLIGHT_ANNOUNCE_IMAGE_URL')
 
 # --- Получение токена ---
 BOT_TOKEN = os.getenv('DISCORD_TOKEN')
-if BOT_TOKEN == "YOUR_BOT_TOKEN":
-    print("WARNING: Используется токен по умолчанию! Пожалуйста, замените его на реальный токен.")
 
 # --- Инициализация бота ---
 intents = discord.Intents.default()
@@ -33,11 +34,7 @@ bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
 @bot.event
 async def on_ready():
     print(f"Бот {bot.user.name} подключен!")
-    print(f"ANNOUNCEMENT_CHANNEL_ID: {ANNOUNCEMENT_CHANNEL_ID}")
-    print(f"WELCOME_CHANNEL_ID: {WELCOME_CHANNEL_ID}")
-    print(f"ATO_NEWS_CHANNEL_ID: {ATO_NEWS_CHANNEL_ID}")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="за сервером"))
-    check_and_send_weekly_flight_announcement.start()
 
 @bot.event
 async def on_member_join(member):
@@ -50,6 +47,49 @@ async def on_member_join(member):
         )
         embed.set_thumbnail(url=member.avatar.url)
         await channel.send(embed=embed)
+
+# --- Команда для расчета компонентов ветра ---
+@bot.command(name="wind_calculate", help="Рассчитать продольный и боковой компоненты ветра.")
+async def wind_calculate(ctx, wind_metar: str, runway_heading: int):
+    """Рассчитывает продольный и боковой компоненты ветра.
+
+    Аргументы:
+        wind_metar: Направление и скорость ветра из METAR (например, "09005MPS").
+        runway_heading: Курс полосы (в градусах).
+    """
+    try:
+        # 1. Извлекаем направление и скорость ветра
+        wind_direction = int(wind_metar[:3])  # Первые три символа - направление
+        wind_speed = int(wind_metar[3:5])  # Следующие два символа - скорость
+
+        # 2. Переводим углы в радианы
+        wind_direction_rad = (wind_direction / 360) * 2 * math.pi
+        runway_heading_rad = (runway_heading / 360) * 2 * math.pi
+
+        # 3. Рассчитываем разницу углов
+        angle_difference = wind_direction_rad - runway_heading_rad
+
+        # 4. Рассчитываем компоненты ветра
+        headwind_component = round(wind_speed * math.cos(angle_difference), 1)  # Продольный (попутный/встречный)
+        crosswind_component = round(wind_speed * math.sin(angle_difference), 1)  # Боковой
+
+        # 5. Формируем ответ
+        embed = discord.Embed(
+            title="💨 Расчет компонентов ветра 💨",
+            color=BOT_COLOR,
+        )
+        embed.add_field(name="Ветер из METAR", value=wind_metar, inline=False)
+        embed.add_field(name="Курс полосы", value=f"{runway_heading}°", inline=False)
+        embed.add_field(name="Продольный компонент", value=f"{headwind_component} (попутный/встречный)", inline=False)
+        embed.add_field(name="Боковой компонент", value=f"{crosswind_component}", inline=False)
+
+        # 6. Отправляем ответ
+        await ctx.send(embed=embed)
+
+    except ValueError:
+        await ctx.send("Ошибка: Неверный формат данных. Убедитесь, что направление ветра - число от 000 до 360, а курс полосы - целое число.")
+    except Exception as e:
+        await ctx.send(f"Произошла ошибка при расчете: {e}")
 
 # --- Команды ---
 @bot.command(name="hello", description="Приветствует пользователя")
@@ -112,65 +152,94 @@ async def wind_conversion(ctx, knots: float):
                      icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url)
     await ctx.send(embed=embed)
 
-    @bot.command(name="say", description="Отправить сообщение в канал от имени бота (только для администраторов)")
-    @commands.has_permissions(administrator=True)
-    async def say(ctx, channel: discord.TextChannel, *, message: str):
-        """
-        Отправляет сообщение в указанный канал от имени бота.
+# --- Команда для отправки сообщений от имени бота ---
+@bot.command(name="say", help="Отправить сообщение от имени бота в указанный канал.")
+@commands.has_permissions(administrator=True)
+async def say(ctx, channel: discord.TextChannel, *, message: str):
+        """Отправляет сообщение от имени бота в указанный канал.
+
+        Аргументы:
+            channel: Канал, в который нужно отправить сообщение (упоминание канала).
+            message: Текст сообщения.
         """
         try:
-            await channel.send(message)
-            embed = discord.Embed(description=f"**✅ Сообщение отправлено в {channel.mention}!**",
-                                  color=discord.Color.green())
-            await ctx.send(embed=embed)
-        except discord.Forbidden:
             embed = discord.Embed(
-                description=f"**🚫 Ошибка: Недостаточно прав для отправки сообщения в {channel.mention}!**",
-                color=discord.Color.red())
-            await ctx.send(embed=embed)
+                description=message,
+                color=BOT_COLOR,
+                timestamp=datetime.datetime.now(datetime.timezone.utc)
+            )
+            embed.set_footer(text=f"Отправлено администратором {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            await channel.send(embed=embed)
+            await ctx.message.delete()  # Удаляем сообщение с командой
+        except discord.errors.Forbidden:
+            await ctx.send("Ошибка: У меня нет прав на отправку сообщений в этот канал.")
         except Exception as e:
-            print(f"Ошибка при отправке сообщения: {e}")
-            embed = discord.Embed(
-                description="**❌ Произошла ошибка при отправке сообщения. Обратитесь к разработчику бота!**",
-                color=discord.Color.red())
-            await ctx.send(embed=embed)
+            await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
-@bot.command(name="announce", help="Отправить объявление от имени бота.")
+# --- Команда для отправки объявлений от имени бота ---
+@bot.command(name="announce", help="Отправить объявление от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
-async def announce(ctx, *, message):
-    channel = bot.get_channel(ANNOUNCEMENT_CHANNEL_ID)
-    if channel:
+async def announce(ctx, channel: discord.TextChannel, *, message: str):
+    """Отправляет объявление от имени бота в указанный канал.
+
+    Аргументы:
+        ctx: Контекст команды.
+        channel: Канал, в который нужно отправить объявление (упоминание канала).
+        message: Текст объявления.
+    """
+    try:
+        # Создаем Embed-сообщение
         embed = discord.Embed(
-            title="Объявление",
+            title=f"{ANNOUNCEMENT_EMOJI} Объявление",  # Добавляем эмодзи в заголовок
             description=message,
             color=BOT_COLOR,
             timestamp=datetime.datetime.now(datetime.timezone.utc)
         )
-        embed.set_footer(text=f"Отправлено администратором {ctx.author.name}", icon_url=ctx.author.avatar.url)
+        embed.set_footer(text="Объявление от бота")  # Добавляем футер
+
+        # Отправляем сообщение
         await channel.send(embed=embed)
+
+        # Добавляем реакцию к исходному сообщению (опционально)
+        await ctx.message.add_reaction("✅")
+
+        # Удаляем сообщение с командой (опционально)
         await ctx.message.delete()
-    else:
-        await ctx.send("Ошибка: Канал объявлений не найден.")
+
+    except discord.errors.Forbidden:
+        await ctx.send("Ошибка: У меня нет прав на отправку сообщений в этот канал.")
+    except Exception as e:
+        await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
 @bot.command(name="flight_announce", help="Создать объявление об учебных полетах с реакциями.")
 @commands.has_permissions(administrator=True)
-async def flight_announce(ctx):
-    today = datetime.date.today()
-    days_until_sunday = (6 - today.weekday()) % 7
-    next_sunday = today + datetime.timedelta(days=days_until_sunday)
-    date_string = next_sunday.strftime("%d.%m")
+async def flight_announce(ctx, flight_date: str, flight_time: str):
+    """Создает объявление об учебных полетах с реакциями.
+
+    Аргументы:
+        flight_date: Дата проведения полетов (например, "27.04").
+        flight_time: Время проведения полетов (например, "17-19").
+    """
+    #today = datetime.date.today()
+    #days_until_sunday = (6 - today.weekday()) % 7
+    #next_sunday = today + datetime.timedelta(days=days_until_sunday)
+    #date_string = next_sunday.strftime("%d.%m")
     role_mentions = ' '.join(f'<@&{role.id}>' for role in ctx.guild.roles if role.name in ROLES_TO_MENTION)
-    message_text = f"Учебные полеты ({date_string}) 17-19 UTC URMM IVAO. Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️"
+    #message_text = f"Учебные полеты {flight_time} URMM IVAO. Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️"
 
     channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
     if channel:
         embed = discord.Embed(
-            title="Учебные полеты",
-            description=message_text,
+            title="✈️ Учебные полеты 🚀",
+            #description=message_text,
             color=BOT_COLOR,
             timestamp=datetime.datetime.now(datetime.timezone.utc)
         )
-        embed.add_field(name="Участники", value=role_mentions, inline=False)
+        embed.add_field(name="📅 Дата", value=flight_date, inline=False)
+        embed.add_field(name="🕒 Время", value=f"{flight_time} UTC", inline=False)  # Добавляем "UTC" к времени
+        embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
+        embed.add_field(name="👥 Участники", value="@Курсанты", inline=False)
+        embed.add_field(name="ℹ️ Инструкция", value="Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️", inline=False)
         embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
         embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)  # Добавляем изображение
 
@@ -281,6 +350,7 @@ async def mute(ctx, member: discord.Member, duration: str, *, reason=None):
     )
     await ctx.send(embed=embed)
 
+
 @bot.command(name="unmute", help="Снять мут с участника.")
 @commands.has_permissions(manage_roles=True)
 async def unmute(ctx, member: discord.Member, *, reason=None):
@@ -301,7 +371,13 @@ async def unmute(ctx, member: discord.Member, *, reason=None):
     embed.set_footer(text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
     await ctx.send(embed=embed)
 
-# --- Helper functions ---
+    @bot.event
+    async def on_message(message):
+        # Make sure the bot doesn't respond to itself
+        if message.author == bot.user:
+            return
+    # --- Helper functions ---
+
 
 def parse_duration(duration: str) -> int:
     units = {"s": 1, "m": 60, "h": 3600, "d": 86400}
@@ -315,40 +391,5 @@ def parse_duration(duration: str) -> int:
     except ValueError:
         return None
 
-# --- Фоновые задачи ---
-@tasks.loop(hours=24)
-async def check_and_send_weekly_flight_announcement():
-    now = datetime.datetime.now()
-    if now.weekday() == 2 and now.hour == 12 and now.minute == 0:
-        channel = bot.get_channel(ATO_NEWS_CHANNEL_ID) #ATO NEWS CHANNEL
-        if channel:
-            today = datetime.date.today()
-            days_until_sunday = (6 - today.weekday()) % 7
-            next_sunday = today + datetime.timedelta(days=days_until_sunday)
-            date_string = next_sunday.strftime("%d.%m")
-            role_mentions = ' '.join(f'<@&{role.id}>' for role in ctx.guild.roles if role.name in ROLES_TO_MENTION)
-            message_text = f"Учебные полеты ({date_string}) 17-19 UTC URMM IVAO. Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️"
-
-            embed = discord.Embed(
-                title="Учебные полеты",
-                description=message_text,
-                color=BOT_COLOR,
-                timestamp=datetime.datetime.now(datetime.timezone.utc)
-            )
-            embed.add_field(name="Участники", value=role_mentions, inline=False)
-            embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
-            embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL) # Добавляем изображение
-            message = await channel.send(embed=embed)
-
-            for emoji in EXERCISE_EMOJIS:
-                await message.add_reaction(emoji)
-            print("Объявление об учебных полетах отправлено.")
-        else:
-            print("Ошибка: Канал объявлений не найден.")
-
-@check_and_send_weekly_flight_announcement.before_loop
-async def before_check_and_send():
-    await bot.wait_until_ready()
-
-# --- Запуск бота ---
+    # --- Запуск бота ---
 bot.run(BOT_TOKEN)
