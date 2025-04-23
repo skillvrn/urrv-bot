@@ -57,8 +57,8 @@ jobs:
             export DISCORD_WELCOME_CHANNEL_ID="${{ secrets.DISCORD_WELCOME_CHANNEL_ID }}"
             export DISCORD_ATO_NEWS_CHANNEL_ID="${{ secrets.DISCORD_ATO_NEWS_CHANNEL_ID }}"
             export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ secrets.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
-            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ FLIGHT_ANNOUNCE_IMAGE_URL }}"
-            export XR_SITE_URL="${{ XR_SITE_URL }}"
+            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ secrets.FLIGHT_ANNOUNCE_IMAGE_URL }}"
+            export XR_SITE_URL="${{ secrets.XR_SITE_URL }}"
             docker-compose down
             docker-compose up -d
           EOF
