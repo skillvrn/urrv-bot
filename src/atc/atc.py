@@ -10,7 +10,7 @@ import os
 BOT_PREFIX = "/"
 POSITION_ANNOUNCEMENT_CHANNEL_ID = os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID')
 XR_SITE_URL = os.getenv('XR_SITE_URL')
-CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
+CHECK_INTERVAL_SECONDS = 120  # Как часто проверять сайт
 BOT_COLOR = discord.Color.green()
 
 # --- Получение токена ---
