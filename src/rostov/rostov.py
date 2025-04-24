@@ -394,3 +394,4 @@ def parse_duration(duration: str) -> int:
     # --- Запуск бота ---
 bot.run(BOT_TOKEN)
 
+
