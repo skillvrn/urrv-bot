@@ -58,6 +58,10 @@ jobs:
             export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
             export FLIGHT_ANNOUNCE_IMAGE_URL="${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}"
             export XR_SITE_URL="${{ vars.XR_SITE_URL }}"
+            docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
+            docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
+            docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$TAG_VERSION
             docker-compose down
             docker-compose up -d
+            docker system prune -f
           EOF
