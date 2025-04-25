@@ -53,12 +53,12 @@ jobs:
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /srv/urrv-bot
             export DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}"
-            export DISCORD_ANNOUNCEMENT_CHANNEL_ID="${{ env.DISCORD_ANNOUNCEMENT_CHANNEL_ID }}"
-            export DISCORD_WELCOME_CHANNEL_ID="${{ env.DISCORD_WELCOME_CHANNEL_ID }}"
-            export DISCORD_ATO_NEWS_CHANNEL_ID="${{ env.DISCORD_ATO_NEWS_CHANNEL_ID }}"
-            export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ env.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
-            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ env.FLIGHT_ANNOUNCE_IMAGE_URL }}"
-            export XR_SITE_URL="${{ env.XR_SITE_URL }}"
+            export DISCORD_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_ANNOUNCEMENT_CHANNEL_ID }}"
+            export DISCORD_WELCOME_CHANNEL_ID="${{ vars.DISCORD_WELCOME_CHANNEL_ID }}"
+            export DISCORD_ATO_NEWS_CHANNEL_ID="${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}"
+            export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
+            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}"
+            export XR_SITE_URL="${{ vars.XR_SITE_URL }}"
             docker-compose down
             docker-compose up -d
           EOF
