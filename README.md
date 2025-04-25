@@ -6,7 +6,6 @@ Automated notification system for the Rostov Training Center
 
 | Имя переменной | Назначение |
 |--------------|-----------|
-| `DISCORD_ANNOUNCEMENT_CHANNEL_ID` | ID Discord-канала для уведомлений |
 | `DISCORD_ATO_NEWS_CHANNEL_ID` | ID Dicsord-канала для новостей |
 | `DISCORD_TOKEN` | Discord token для доступа бота к серверу |
 | `DISCORD_WELCOME_CHANNEL_ID` | ID Discord-канала приветствия  |
