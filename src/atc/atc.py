@@ -115,6 +115,7 @@ async def before_monitor_positions():
 @bot.event
 async def on_ready():
     print(f"Бот {bot.user.name} готов!")
+    print(f"ID канала для объявлений: {POSITION_ANNOUNCEMENT_CHANNEL_ID}")
     monitor_positions.start()
 
 # --- Запуск бота ---
