@@ -1,4 +1,4 @@
-name: Deploy URRV-BOT
+name: Deploy URRV-BOT for prod
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - '*'
 
 jobs:
-  deploy:
+  deploy_prod:
     name: Deploy URRV-BOT on prod
     runs-on: ubuntu-latest
     steps:
