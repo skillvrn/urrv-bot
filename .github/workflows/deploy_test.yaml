@@ -26,7 +26,7 @@ jobs:
       - name: Build and push rostov-bot image
         working-directory: ./src/rostov
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA .
           docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA
       
       - name: Build and push metar-bot image
