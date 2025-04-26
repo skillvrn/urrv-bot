@@ -10,6 +10,9 @@ jobs:
     name: Deploy URRV-BOT on prod
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
@@ -31,9 +34,6 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest
           docker tag ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
-
-      - name: Checkout code
-        uses: actions/checkout@v3
 
       - name: Insert version into docker-compose
         run: |
