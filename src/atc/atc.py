@@ -115,7 +115,10 @@ async def before_monitor_positions():
 @bot.event
 async def on_ready():
     print(f"Бот {bot.user.name} готов!")
-    print(f"ID канала для объявлений: {POSITION_ANNOUNCEMENT_CHANNEL_ID}")
+    if POSITION_ANNOUNCEMENT_CHANNEL_ID:
+        print(f"ID канала для объявлений: {POSITION_ANNOUNCEMENT_CHANNEL_ID}", flush=True)
+    else:
+        print("⚠️ DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID не установлен!", flush=True)
     monitor_positions.start()
 
 # --- Запуск бота ---
