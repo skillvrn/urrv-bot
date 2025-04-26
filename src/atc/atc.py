@@ -9,12 +9,12 @@ import os
 # --- Настройки ---
 BOT_PREFIX = "/"
 POSITION_ANNOUNCEMENT_CHANNEL_ID = os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID')
-XR_SITE_URL = os.getenv('XR_SITE_URL')
-CHECK_INTERVAL_SECONDS = 120  # Как часто проверять сайт
+XR_SITE_URL = "https://xr.ivao.aero/"
+CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
 BOT_COLOR = discord.Color.green()
 
 # --- Получение токена ---
-TOKEN = os.environ.get("DISCORD_TOKEN")
+TOKEN = os.environ.get("DISCORD_TOKEN") #Рекомендуемый способ
 
 # --- Инициализация бота ---
 intents = discord.Intents.default()
@@ -115,10 +115,6 @@ async def before_monitor_positions():
 @bot.event
 async def on_ready():
     print(f"Бот {bot.user.name} готов!")
-    if POSITION_ANNOUNCEMENT_CHANNEL_ID:
-        print(f"ID канала для объявлений: {POSITION_ANNOUNCEMENT_CHANNEL_ID}", flush=True)
-    else:
-        print("⚠️ DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID не установлен!", flush=True)
     monitor_positions.start()
 
 # --- Запуск бота ---
