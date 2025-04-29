@@ -70,6 +70,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA
             docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$SHORT_SHA
             docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA
+            export DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}"
             docker-compose down
             docker-compose up -d
             docker system prune -f
