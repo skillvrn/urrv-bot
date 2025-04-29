@@ -1,0 +1,74 @@
+name: Deploy URRV-BOT for test
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build_deploy_test:
+    name: Build and deploy URRV-BOT on test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get short SHA
+        id: get-short-sha
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push rostov-bot image
+        working-directory: ./src/rostov
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA .
+          docker push ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA
+      
+      - name: Build and push metar-bot image
+        working-directory: ./src/metar
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/metar-bot:$SHORT_SHA .
+          docker push ${{ secrets.DOCKER_USERNAME }}/metar-bot:$SHORT_SHA
+
+      - name: Build and push atc-bot image
+        working-directory: ./src/atc
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA .
+          docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA
+
+      - name: Forming docker-compose file
+        run: |
+          sed -e "s/\${VERSION}/$SHORT_SHA/g" \
+              -e "s\/${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
+              -e "s/\${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}/$DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID/g" \
+              -e "s\/${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
+              -e "s\/${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
+              -e "s\/${FLIGHT_ANNOUNCE_IMAGE_URL}/$FLIGHT_ANNOUNCE_IMAGE_URL/g" \
+              docker-compose.template.yaml > docker-compose.yaml
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+      - name: Copy docker-compose.yaml to server
+        run: |
+          scp -o StrictHostKeyChecking=no -P ${{ secrets.SSH_PORT }} ./docker-compose.yaml ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/srv/urrv-bot
+
+      - name: SSH to server and deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << EOF
+            cd /srv/urrv-bot
+            docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA
+            docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$SHORT_SHA
+            docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$SHORT_SHA
+            docker-compose down
+            docker-compose up -d
+            docker system prune -f
+            docker image prune -a -f
+          EOF

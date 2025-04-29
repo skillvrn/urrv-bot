@@ -1,4 +1,4 @@
-name: Deploy URRV-BOT
+name: Deploy URRV-BOT for prod
 
 on:
   push:
@@ -6,10 +6,13 @@ on:
       - '*'
 
 jobs:
-  deploy:
+  deploy_prod:
     name: Deploy URRV-BOT on prod
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
@@ -32,10 +35,7 @@ jobs:
           docker tag ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
 
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Insert version into docker-compose
+      - name: Forming docker-compose file
         run: |
           sed "s/\${VERSION}/$TAG_VERSION/g" docker-compose.template.yaml > docker-compose.yaml
 
@@ -57,7 +57,6 @@ jobs:
             export DISCORD_ATO_NEWS_CHANNEL_ID="${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}"
             export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
             export FLIGHT_ANNOUNCE_IMAGE_URL="${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}"
-            export XR_SITE_URL="${{ vars.XR_SITE_URL }}"
             docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$TAG_VERSION
