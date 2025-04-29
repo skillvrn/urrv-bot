@@ -8,7 +8,7 @@ import os
 
 # --- Настройки ---
 BOT_PREFIX = "/"
-POSITION_ANNOUNCEMENT_CHANNEL_ID = os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID')
+POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID'))
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
 BOT_COLOR = discord.Color.green()
