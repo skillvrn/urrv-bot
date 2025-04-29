@@ -13,8 +13,8 @@ from bs4 import BeautifulSoup
 
 # --- Настройки ---
 BOT_PREFIX = "/"
-WELCOME_CHANNEL_ID = os.getenv('DISCORD_WELCOME_CHANNEL_ID')
-ATO_NEWS_CHANNEL_ID = os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID')
+WELCOME_CHANNEL_ID = int(os.getenv('DISCORD_WELCOME_CHANNEL_ID'))
+ATO_NEWS_CHANNEL_ID = int(os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID'))
 ANNOUNCEMENT_EMOJI = "📢"
 ROLES_TO_MENTION = ["@Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
