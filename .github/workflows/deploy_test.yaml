@@ -44,11 +44,11 @@ jobs:
       - name: Forming docker-compose file
         run: |
           sed -e "s/\${VERSION}/$SHORT_SHA/g" \
-              -e "s\/${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
+              -e "s/\${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
               -e "s/\${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}/$DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID/g" \
-              -e "s\/${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
-              -e "s\/${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
-              -e "s\/${FLIGHT_ANNOUNCE_IMAGE_URL}/$FLIGHT_ANNOUNCE_IMAGE_URL/g" \
+              -e "s/\${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
+              -e "s/\${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
+              -e "s/\${FLIGHT_ANNOUNCE_IMAGE_URL}/$FLIGHT_ANNOUNCE_IMAGE_URL/g" \
               docker-compose.template.yaml > docker-compose.yaml
 
       - name: Set up SSH key
