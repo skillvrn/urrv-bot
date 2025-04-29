@@ -35,7 +35,7 @@ jobs:
           docker tag ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
 
-      - name: Insert version into docker-compose
+      - name: Forming docker-compose file
         run: |
           sed "s/\${VERSION}/$TAG_VERSION/g" docker-compose.template.yaml > docker-compose.yaml
 
@@ -57,7 +57,6 @@ jobs:
             export DISCORD_ATO_NEWS_CHANNEL_ID="${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}"
             export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
             export FLIGHT_ANNOUNCE_IMAGE_URL="${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}"
-            export XR_SITE_URL="${{ vars.XR_SITE_URL }}"
             docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$TAG_VERSION
