@@ -13,15 +13,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Get version from tag
+        run: |
+          echo "TAG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Forming docker-compose file
+        env:
+          DISCORD_ATO_NEWS_CHANNEL_ID: ${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}
+          DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID: ${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}
+          DISCORD_WELCOME_CHANNEL_ID: ${{ vars.DISCORD_WELCOME_CHANNEL_ID }}
+        run: |
+          sed "s/\${VERSION}/$TAG_VERSION/g" \
+            -e "s/\${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
+            -e "s/\${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}/$DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID/g" \
+            -e "s/\${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
+            -e "s/\${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
+            docker-compose.template.yaml > docker-compose.yaml
+
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Get version from tag
-        run: |
-          echo "TAG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Pull and tag images
         run: |
@@ -35,10 +48,6 @@ jobs:
           docker tag ${{ secrets.DOCKER_USERNAME }}/atc-bot:latest ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
 
-      - name: Forming docker-compose file
-        run: |
-          sed "s/\${VERSION}/$TAG_VERSION/g" docker-compose.template.yaml > docker-compose.yaml
-
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
         with:
@@ -50,17 +59,13 @@ jobs:
 
       - name: SSH to server and deploy
         run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << EOF
             cd /srv/urrv-bot
-            export DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}"
-            export DISCORD_WELCOME_CHANNEL_ID="${{ vars.DISCORD_WELCOME_CHANNEL_ID }}"
-            export DISCORD_ATO_NEWS_CHANNEL_ID="${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}"
-            export DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID="${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}"
-            export FLIGHT_ANNOUNCE_IMAGE_URL="${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}"
             docker pull ${{ secrets.DOCKER_USERNAME }}/atc-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/metar-bot:$TAG_VERSION
             docker pull ${{ secrets.DOCKER_USERNAME }}/rostov-bot:$TAG_VERSION
             docker-compose down
             docker-compose up -d
             docker system prune -f
+            docker image prune -a -f
           EOF
