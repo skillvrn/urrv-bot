@@ -14,7 +14,7 @@ CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
 BOT_COLOR = discord.Color.green()
 
 # --- Получение токена ---
-TOKEN = os.getenv("DISCORD_TOKEN") #Рекомендуемый способ
+TOKEN = os.getenv('DISCORD_TOKEN')
 
 # --- Инициализация бота ---
 intents = discord.Intents.default()
