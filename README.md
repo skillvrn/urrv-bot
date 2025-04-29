@@ -18,7 +18,6 @@ Automated notification system for the Rostov Training Center
 | `SSH_PORT` | SSH-порт для подключения к серверу с приложением для деплоя |
 | `SSH_USERNAME` | Имя SSH-пользователя на сервере с приложением для деплоя |
 | `SSH_PRIVATE_KEY` | Приватный SSH-ключ пользователя для подключения к серверу с приложением для деплоя |
-| `XR_SITE_URL` | URL xr ivao |
 
 ## Gitflow
 
