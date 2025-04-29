@@ -16,6 +16,21 @@ jobs:
       - name: Get short SHA
         id: get-short-sha
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Forming docker-compose file
+        env:
+          DISCORD_ATO_NEWS_CHANNEL_ID: ${{ vars.DISCORD_ATO_NEWS_CHANNEL_ID }}
+          DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID: ${{ vars.DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID }}
+          DISCORD_WELCOME_CHANNEL_ID: ${{ vars.DISCORD_WELCOME_CHANNEL_ID }}
+          FLIGHT_ANNOUNCE_IMAGE_URL: ${{ vars.FLIGHT_ANNOUNCE_IMAGE_URL }}
+        run: |
+          sed -e "s/\${VERSION}/$SHORT_SHA/g" \
+              -e "s/\${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
+              -e "s/\${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}/$DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID/g" \
+              -e "s/\${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
+              -e "s/\${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
+              -e "s/\${FLIGHT_ANNOUNCE_IMAGE_URL}/$FLIGHT_ANNOUNCE_IMAGE_URL/g" \
+              docker-compose.template.yaml > docker-compose.yaml
       
       - name: Log in to DockerHub
         uses: docker/login-action@v2
@@ -40,16 +55,6 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA .
           docker push ${{ secrets.DOCKER_USERNAME }}/atc-bot:$SHORT_SHA
-
-      - name: Forming docker-compose file
-        run: |
-          sed -e "s/\${VERSION}/$SHORT_SHA/g" \
-              -e "s/\${DISCORD_ATO_NEWS_CHANNEL_ID}/$DISCORD_ATO_NEWS_CHANNEL_ID/g" \
-              -e "s/\${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}/$DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID/g" \
-              -e "s/\${DISCORD_TOKEN}/$DISCORD_TOKEN/g" \
-              -e "s/\${DISCORD_WELCOME_CHANNEL_ID}/$DISCORD_WELCOME_CHANNEL_ID/g" \
-              -e "s/\${FLIGHT_ANNOUNCE_IMAGE_URL}/$FLIGHT_ANNOUNCE_IMAGE_URL/g" \
-              docker-compose.template.yaml > docker-compose.yaml
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
