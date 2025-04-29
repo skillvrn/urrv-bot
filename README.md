@@ -12,7 +12,6 @@ Automated notification system for the Rostov Training Center
 | `DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID` | ID Discord-канала |
 | `DOCKER_USERNAME` | Имя пользователя учетной записи в репозитории Dockerhub |
 | `DOCKER_PASSWORD` | Пароль паользователя учетной записи в репозитории Dockerhub |
-| `FLIGHT_ANNOUNCE_IMAGE_URL` | URL картинки анонсов |
 | `PYTHON_VERSION` | Версия python (в Dockerfiles и в CI/CD) |
 | `SSH_HOST` | Hostname сервера для подключения по SSH для деплоя |
 | `SSH_PORT` | SSH-порт для подключения к серверу с приложением для деплоя |
