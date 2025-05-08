@@ -10,7 +10,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='/', intents=intents)
 
 # Regular expression for valid ICAO code (4 letters)
-ICAO_REGEX = r"^[A-Z]{4}$"
+icao_regex = r"^[A-Z]{4}$"
 
 # Command to get METAR and TAF data
 @bot.command(name="weather", description="Получить METAR и TAF данные для указанного ICAO аэропорта с metartaf.ru")
@@ -20,7 +20,7 @@ async def weather_command(ctx, icao: str):
     """
 
     # Validate ICAO
-    if re.match(ICAO_REGEX, icao.upper()):
+    if re.match(icao_regex, icao.upper()):
         icao = icao.upper()  # Convert to uppercase for API
 
         try:
@@ -52,9 +52,9 @@ async def weather_command(ctx, icao: str):
             if metar or taf:
                 await ctx.send(formatted_message)
             else:
-                await ctx.send(f"No METAR or TAF data found for {icao}.") #If it's all null
+                await ctx.send(f"No METAR or TAF data found for {icao}.")  # If it's all null
 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             await ctx.send(f"Ошибка при получении данных для {icao}, возможно Вы ввели неверный ICAO")
         except Exception as e:
             await ctx.send(f"Произошла непредвиденная ошибка для {icao}: {e}")

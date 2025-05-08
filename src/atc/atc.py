@@ -2,19 +2,18 @@ import discord
 from discord.ext import commands, tasks
 import aiohttp
 from bs4 import BeautifulSoup
-import asyncio
 import datetime
 import os
 
 # --- Настройки ---
 BOT_PREFIX = "/"
 POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID'))
-XR_SITE_URL = "https://xr.ivao.aero/"
-CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
+XR_SITE_URL = os.getenv('XR_SITE_URL')
+CHECK_INTERVAL_SECONDS = 120  # Как часто проверять сайт
 BOT_COLOR = discord.Color.green()
 
 # --- Получение токена ---
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # --- Инициализация бота ---
 intents = discord.Intents.default()

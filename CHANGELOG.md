@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.3.0 - 2025/05/05
+* Исправлены ошибки в rostov.py; metar.py; atc.py
+
 ## v0.2.0 - 2025/04/29
 * Изменена модель ветвления git
 * docker-compose теперь формируется из template
