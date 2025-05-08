@@ -38,7 +38,10 @@ async def on_member_join(member):
             if channel:
                 embed = discord.Embed(
                     title="Добро пожаловать!",
-                    description=f"Привет, {member.mention}! Добро пожаловать на сервер {member.guild.name}! Ознакомьтесь с правилами и получите роли.",
+                    description=(
+                        f"Привет, {member.mention}! Добро пожаловать на сервер {member.guild.name}! "
+                        "Ознакомьтесь с правилами и получите роли."
+                    ),
                     color=BOT_COLOR
                 )
                 embed.set_thumbnail(url=member.avatar.url)
@@ -51,7 +54,8 @@ async def on_member_join(member):
 # --- Команда для расчета компонентов ветра ---
 @bot.command(name="wind_calculate", help="Рассчитать продольный и боковой компоненты ветра.")
 async def wind_calculate(ctx, wind_metar: str, runway_heading: int):
-    """Рассчитывает продольный и боковой компоненты ветра.
+    """
+    Рассчитывает продольный и боковой компоненты ветра.
 
     Аргументы:
         wind_metar: Направление и скорость ветра из METAR (например, "09005MPS").
@@ -87,45 +91,60 @@ async def wind_calculate(ctx, wind_metar: str, runway_heading: int):
         await ctx.send(embed=embed)
 
     except ValueError:
-        await ctx.send("Ошибка: Неверный формат данных. Убедитесь, что направление ветра - число от 000 до 360, а курс полосы - целое число.")
+        await ctx.send(
+            "Ошибка: Неверный формат данных. Убедитесь, что направление ветра - число от 000 до 360, а курс полосы - целое число."
+        )
     except Exception as e:
         await ctx.send(f"Произошла ошибка при расчете: {e}")
 
 # --- Команды ---
 @bot.command(name="hello", description="Приветствует пользователя")
 async def hello(ctx):
-    embed = discord.Embed(title="**✨ Добро пожаловать! ✨**",
-                          description=f"Привет, {ctx.author.mention}! **Рады видеть вас на борту!** 🚀",
-                          color=discord.Color.from_rgb(75, 200, 100))
+    embed = discord.Embed(
+        title="**✨ Добро пожаловать! ✨**",
+        description=f"Привет, {ctx.author.mention}! **Рады видеть вас на борту!** 🚀",
+        color=discord.Color.from_rgb(75, 200, 100)
+    )
     embed.set_thumbnail(url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
-    embed.add_field(name="**Как освоиться?**",
-                    value="Прочтите правила и получите роли!", inline=False)
-    embed.set_footer(text="Приятного общения!",
-                     icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url)
+    embed.add_field(name="**Как освоиться?**", value="Прочтите правила и получите роли!", inline=False)
+    embed.set_footer(
+        text="Приятного общения!",
+        icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url
+    )
     await ctx.send(embed=embed)
 
 @bot.command(name="serverinfo", description="Информация о сервере")
 async def serverinfo(ctx):
     guild = ctx.guild
-    embed = discord.Embed(title=f"**📊 Информация о сервере: {guild.name} 📊**",
-                          description=f"Описание: {guild.description or '**Отсутствует**'}\n"
-                                      f"Количество участников: **{guild.member_count}**\n"
-                                      f"Создан: **{guild.created_at.strftime('%d.%m.%Y %H:%M:%S')}**",
-                          color=discord.Color.from_rgb(102, 178, 255))
+    embed = discord.Embed(
+        title=f"**📊 Информация о сервере: {guild.name} 📊**",
+        description=(
+            f"Описание: {guild.description or '**Отсутствует**'}\n"
+            f"Количество участников: **{guild.member_count}**\n"
+            f"Создан: **{guild.created_at.strftime('%d.%m.%Y %H:%M:%S')}**"
+        ),
+        color=discord.Color.from_rgb(102, 178, 255)
+    )
     embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
     await ctx.send(embed=embed)
 
 @bot.command(name="rules", description="Правила сервера")
 async def rules(ctx):
-    embed = discord.Embed(title="**📜 Основные правила сервера 📜**",
-                          description="1. **Будьте вежливы и уважайте других участников. 🙏**\n"
-                                      "2. **Не допускайте спама и флуда в чате. 🚫**\n"
-                                      "3. **Избегайте оскорблений и агрессивного поведения. 😠**\n"
-                                      "4. **Соблюдайте тематику каналов. 💬**\n"
-                                      "5. **Придерживайтесь указаний администрации. 👮**",
-                          color=discord.Color.from_rgb(255, 153, 51))
-    embed.set_footer(text="Соблюдение правил - залог приятного общения!",
-                     icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url)
+    embed = discord.Embed(
+        title="**📜 Основные правила сервера 📜**",
+        description=(
+            "1. **Будьте вежливы и уважайте других участников. 🙏**\n"
+            "2. **Не допускайте спама и флуда в чате. 🚫**\n"
+            "3. **Избегайте оскорблений и агрессивного поведения. 😠**\n"
+            "4. **Соблюдайте тематику каналов. 💬**\n"
+            "5. **Придерживайтесь указаний администрации. 👮**"
+        ),
+        color=discord.Color.from_rgb(255, 153, 51)
+    )
+    embed.set_footer(
+        text="Соблюдение правил - залог приятного общения!",
+        icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url
+    )
     await ctx.send(embed=embed)
 
 @bot.command(name="clear", description="Очищает указанное количество сообщений (только для администраторов).")
@@ -135,28 +154,37 @@ async def clear(ctx, amount: int):
         await ctx.channel.purge(limit=amount + 1)
         embed = discord.Embed(
             description=f"**{amount} сообщений успешно удалены. ✅ Чистота - залог порядка!**",
-            color=discord.Color.from_rgb(153, 255, 153))
+            color=discord.Color.from_rgb(153, 255, 153)
+        )
         await ctx.send(embed=embed, delete_after=3)
     else:
-        await ctx.send(embed=discord.Embed(
-            description="**⚠️ Пожалуйста, укажите число сообщений для удаления в диапазоне от 1 до 100. ⚠️**",
-            color=discord.Color.from_rgb(255, 153, 153)))
+        await ctx.send(
+            embed=discord.Embed(
+                description="**⚠️ Пожалуйста, укажите число сообщений для удаления в диапазоне от 1 до 100. ⚠️**",
+                color=discord.Color.from_rgb(255, 153, 153)
+            )
+        )
 
 @bot.command(name="wind_conversion", description="Конвертирует узлы в километры в час.")
 async def wind_conversion(ctx, knots: float):
     kmh = knots * 1.852
-    embed = discord.Embed(title="**💨 Конвертация скорости ветра 💨**",
-                          description=f"{knots} узлов = **{kmh:.2f}** км/ч",
-                          color=discord.Color.from_rgb(153, 204, 255))
-    embed.set_footer(text="Помните о безопасности полетов!",
-                     icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url)
+    embed = discord.Embed(
+        title="**💨 Конвертация скорости ветра 💨**",
+        description=f"{knots} узлов = **{kmh:.2f}** км/ч",
+        color=discord.Color.from_rgb(153, 204, 255)
+    )
+    embed.set_footer(
+        text="Помните о безопасности полетов!",
+        icon_url=bot.user.avatar.url if bot.user.avatar else bot.user.default_avatar.url
+    )
     await ctx.send(embed=embed)
 
 # --- Команда для отправки сообщений от имени бота ---
 @bot.command(name="say", help="Отправить сообщение от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
 async def say(ctx, channel: discord.TextChannel, *, message: str):
-    """Отправляет сообщение от имени бота в указанный канал.
+    """
+    Отправляет сообщение от имени бота в указанный канал.
 
     Аргументы:
         channel: Канал, в который нужно отправить сообщение (упоминание канала).
@@ -180,7 +208,8 @@ async def say(ctx, channel: discord.TextChannel, *, message: str):
 @bot.command(name="announce", help="Отправить объявление от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
 async def announce(ctx, channel: discord.TextChannel, *, message: str):
-    """Отправляет объявление от имени бота в указанный канал.
+    """
+    Отправляет объявление от имени бота в указанный канал.
 
     Аргументы:
         ctx: Контекст команды.
@@ -214,7 +243,8 @@ async def announce(ctx, channel: discord.TextChannel, *, message: str):
 @bot.command(name="flight_announce", help="Создать объявление об учебных полетах с реакциями.")
 @commands.has_permissions(administrator=True)
 async def flight_announce(ctx, flight_date: str, flight_time: str):
-    """Создает объявление об учебных полетах с реакциями.
+    """
+    Создает объявление об учебных полетах с реакциями.
 
     Аргументы:
         flight_date: Дата проведения полетов (например, "27.04").
@@ -234,7 +264,11 @@ async def flight_announce(ctx, flight_date: str, flight_time: str):
                 embed.add_field(name="🕒 Время", value=f"{flight_time} UTC", inline=False)  # Добавляем "UTC" к времени
                 embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
                 embed.add_field(name="👥 Участники", value="@Курсанты", inline=False)
-                embed.add_field(name="ℹ️ Инструкция", value="Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️", inline=False)
+                embed.add_field(
+                    name="ℹ️ Инструкция",
+                    value="Сообщите о своем участии, нажав на реакцию с соответствующим номером упражнения. ⬇️",
+                    inline=False
+                )
                 embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
                 embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)  # Добавляем изображение
 

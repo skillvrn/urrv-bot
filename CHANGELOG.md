@@ -1,5 +1,8 @@
 # Changelog
 
+## v.0.3.0 - 2025/05/05
+* Исправлен код в rostov.py; metar.py; atc.py
+
 ## v0.3.0 - 2025/05/05
 * Исправлены ошибки в rostov.py; metar.py; atc.py
 
