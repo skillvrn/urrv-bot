@@ -12,7 +12,10 @@ ANNOUNCEMENT_EMOJI = "📢"
 ROLES_TO_MENTION = ["@Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
-FLIGHT_ANNOUNCE_IMAGE_URL = "https://media.discordapp.net/attachments/1274246245967200313/1361762541436407899/image.png?ex=67ffefb2&is=67fe9e32&hm=b1152df005c0aa0ca39c0e38bb382e583188be746aa4ebae2186ea20ad6af777&=&format=webp&quality=lossless"
+FLIGHT_ANNOUNCE_IMAGE_URL = (
+    "https://media.discordapp.net/attachments/1274246245967200313/"
+    "1361762541436407899/image.png?ex=67ffefb2&is=67fe9e32&hm=b1152df005c0aa0ca39c0e38bb382e583188be746aa4ebae2186ea20ad6af777&=&format=webp&quality=lossless"
+)
 
 # --- Получение токена ---
 BOT_TOKEN = os.getenv('DISCORD_TOKEN')
