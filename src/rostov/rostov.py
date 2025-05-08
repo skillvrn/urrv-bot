@@ -1,15 +1,8 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
-import random
-import re  # Для регулярных выражений
-import asyncio  # Для асинхронных задач (например, мута)
 import datetime  # Для работы с датами и временем
-import requests
 import math
-import xml.etree.ElementTree as ET
-import aiohttp
-from bs4 import BeautifulSoup
 
 # --- Настройки ---
 BOT_PREFIX = "/"
