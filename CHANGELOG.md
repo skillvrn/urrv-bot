@@ -1,6 +1,9 @@
 # Changelog
 
 ## v.0.5.0 - 2025/05/05
+* Исправлен код в rostov.py; metar.py; atc.py №4
+
+## v.0.5.0 - 2025/05/05
 * Исправлен код в rostov.py; metar.py; atc.py №3
 
 ## v.0.4.0 - 2025/05/05
