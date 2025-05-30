@@ -7,9 +7,10 @@ from discord.ext import commands
 
 # --- Configuration ---
 ICAO_REGEX = r"^[A-Z]{4}$"
-BOT_TOKEN = os.getenv("DISCORD_TOKEN")
+BOT_TOKEN = os.getenv('DISCORD_TOKEN')
 if not BOT_TOKEN:
-    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
+    raise ValueError(
+        "DISCORD_TOKEN not found in environment variables. Please set it.")
 
 # --- Bot Setup ---
 intents = discord.Intents.default()
@@ -25,10 +26,9 @@ async def on_ready():
 
 
 # --- Commands ---
-@bot.command(
-    name="weather",
-    description="Get METAR and TAF data for an ICAO airport from " "metartaf.ru",
-)
+@bot.command(name="weather",
+             description="Get METAR and TAF data for an ICAO airport from "
+                         "metartaf.ru")
 async def weather_command(ctx: commands.Context, icao: str):
     """Gets METAR and TAF data for a given ICAO airport from metartaf.ru.
 
@@ -39,15 +39,13 @@ async def weather_command(ctx: commands.Context, icao: str):
     icao = icao.upper()
 
     if not re.match(ICAO_REGEX, icao):
-        await ctx.send(
-            "Invalid ICAO code format. Please use a 4-letter code " "(e.g., UUDD)."
-        )
+        await ctx.send("Invalid ICAO code format. Please use a 4-letter code "
+                       "(e.g., UUDD).")
         return
 
     try:
         url = f"http://metartaf.ru/{icao}.xml"
         import requests  # Move import inside the try block
-
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
@@ -58,18 +56,16 @@ async def weather_command(ctx: commands.Context, icao: str):
         except ET.ParseError:
             await ctx.send(
                 f"Error parsing XML data for {icao}. The server might be "
-                "down or the data is malformed."
-            )
+                "down or the data is malformed.")
             return
 
-        metar_element = root.find("metar")
-        taf_element = root.find("taf")
+        metar_element = root.find('metar')
+        taf_element = root.find('taf')
         metar = metar_element.text if metar_element is not None else None
         taf = taf_element.text if taf_element is not None else None
 
-        embed = discord.Embed(
-            title=f"Weather Data for {icao}", color=discord.Color.blue()
-        )
+        embed = discord.Embed(title=f"Weather Data for {icao}",
+                              color=discord.Color.blue())
         if metar:
             embed.add_field(name="METAR", value=metar, inline=False)
         if taf:
@@ -83,8 +79,7 @@ async def weather_command(ctx: commands.Context, icao: str):
     except requests.exceptions.RequestException as e:
         await ctx.send(
             f"Error fetching data for {icao}. Check the ICAO code, or the "
-            f"metartaf.ru service may be unavailable. Error: {e}"
-        )
+            f"metartaf.ru service may be unavailable. Error: {e}")
     except Exception as e:
         await ctx.send(f"An unexpected error occurred for {icao}: {e}")
 
