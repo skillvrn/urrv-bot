@@ -6,25 +6,26 @@ import math
 
 import discord
 from discord.ext import commands
-# No need for tasks import if you're not using it.
 
 # --- Настройки ---
 BOT_PREFIX = "/"
-WELCOME_CHANNEL_ID = int(os.getenv('DISCORD_WELCOME_CHANNEL_ID', 0))
-ATO_NEWS_CHANNEL_ID = int(os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID', 0))
+WELCOME_CHANNEL_ID = int(os.getenv("DISCORD_WELCOME_CHANNEL_ID", 0))
+ATO_NEWS_CHANNEL_ID = int(os.getenv("DISCORD_ATO_NEWS_CHANNEL_ID", 0))
 ANNOUNCEMENT_EMOJI = "📢"
 ROLES_TO_MENTION = ["Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
-FLIGHT_ANNOUNCE_IMAGE_URL = ("https://media.discordapp.net/"
-                             "attachments/1274246245967200313/"
-                             "1361762541436407899/image.png?"
-                             "ex=67ffefb2&is=67fe9e32&hm="
-                             "b1152df005c0aa0ca39c0e38bb382e583188be746aa4ebae"
-                             "2186ea20ad6af777&=&format=webp&quality=lossless")
+FLIGHT_ANNOUNCE_IMAGE_URL = (
+    "https://media.discordapp.net/"
+    "attachments/1274246245967200313/"
+    "1361762541436407899/image.png?"
+    "ex=67ffefb2&is=67fe9e32&hm="
+    "b1152df005c0aa0ca39c0e38bb382e583188be746aa4ebae"
+    "2186ea20ad6af777&=&format=webp&quality=lossless"
+)
 
 # --- Получение токена ---
-BOT_TOKEN = os.getenv('DISCORD_TOKEN')
+BOT_TOKEN = os.getenv("DISCORD_TOKEN")
 if not BOT_TOKEN:
     raise ValueError(
         "DISCORD_TOKEN not found in environment variables. Please set it.")
@@ -42,7 +43,8 @@ async def on_ready():
     """Called when the bot is connected to Discord."""
     print(f"Бот {bot.user.name} подключен!")
     activity = discord.Activity(
-        type=discord.ActivityType.watching, name="за сервером")
+        type=discord.ActivityType.watching,
+        name="за сервером")
     await bot.change_presence(activity=activity)
 
 
@@ -53,15 +55,18 @@ async def on_member_join(member: discord.Member):
     if channel:
         embed = discord.Embed(
             title="Добро пожаловать!",
-            description=(f"Привет, {member.mention}! Добро пожаловать на сервер "
-                         f"{member.guild.name}! Ознакомьтесь с правилами и "
-                         f"получите роли."),
-            color=BOT_COLOR
+            description=(
+                f"Привет, {member.mention}! Добро пожаловать на сервер "
+                f"{member.guild.name}! Ознакомьтесь с правилами и "
+                f"получите роли."
+            ),
+            color=BOT_COLOR,
         )
         embed.set_thumbnail(url=member.avatar.url)
         await channel.send(embed=embed)
     else:
-        print(f"WARNING: Welcome channel (ID: {WELCOME_CHANNEL_ID}) not found.")
+        print(
+            f"WARNING: Welcome channel (ID: {WELCOME_CHANNEL_ID}) not found.")
 
 
 # --- Команды ---
@@ -70,19 +75,34 @@ async def hello(ctx: commands.Context):
     """Greets the user with a welcoming message."""
     embed = discord.Embed(
         title="✨ Добро пожаловать! ✨",
-        description=(f"Привет, {ctx.author.mention}! **Рады видеть вас на борту!**"
-                     " 🚀"),
-        color=discord.Color.from_rgb(75, 200, 100)
+        description=(
+            f"Привет, {
+                ctx.author.mention}! **Рады видеть вас на борту!** 🚀"),
+        color=discord.Color.from_rgb(
+            75,
+            200,
+            100),
     )
     embed.set_thumbnail(
-        url=(ctx.author.avatar.url if ctx.author.avatar
-             else ctx.author.default_avatar.url))
-    embed.add_field(name="**Как освоиться?**",
-                    value="Прочтите правила и получите роли!", inline=False)
+        url=(
+            ctx.author.avatar.url
+            if ctx.author.avatar
+            else ctx.author.default_avatar.url
+        )
+    )
+    embed.add_field(
+        name="**Как освоиться?**",
+        value="Прочтите правила и получите роли!",
+        inline=False,
+    )
     embed.set_footer(
         text="Приятного общения!",
-        icon_url=(bot.user.avatar.url if bot.user.avatar
-                  else bot.user.default_avatar.url))
+        icon_url=(
+            bot.user.avatar.url
+            if bot.user.avatar
+            else bot.user.default_avatar.url
+        )
+    )
     await ctx.send(embed=embed)
 
 
@@ -92,10 +112,12 @@ async def serverinfo(ctx: commands.Context):
     guild = ctx.guild
     embed = discord.Embed(
         title=f"📊 Информация о сервере: {guild.name} 📊",
-        description=(f"Описание: {guild.description or '**Отсутствует**'}\n"
-                     f"Количество участников: **{guild.member_count}**\n"
-                     f"Создан: **{guild.created_at.strftime('%d.%m.%Y %H:%M:%S')}**"),
-        color=discord.Color.from_rgb(102, 178, 255)
+        description=(
+            f"Описание: {guild.description or '**Отсутствует**'}\n"
+            f"Количество участников: **{guild.member_count}**\n"
+            f"Создан: {guild.created_at.strftime('%d.%m.%Y %H:%M:%S')}"
+        ),
+        color=discord.Color.from_rgb(102, 178, 255),
     )
     embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
     await ctx.send(embed=embed)
@@ -106,23 +128,29 @@ async def rules(ctx: commands.Context):
     """Displays the server rules."""
     embed = discord.Embed(
         title="📜 Основные правила сервера 📜",
-        description=("1. **Будьте вежливы и уважайте других участников. 🙏**\n"
-                     "2. **Не допускайте спама и флуда в чате. 🚫**\n"
-                     "3. **Избегайте оскорблений и агрессивного поведения. 😠**\n"
-                     "4. **Соблюдайте тематику каналов. 💬**\n"
-                     "5. **Придерживайтесь указаний администрации. 👮**"),
-        color=discord.Color.from_rgb(255, 153, 51)
+        description=(
+            "1. **Будьте вежливы и уважайте других участников. 🙏**\n"
+            "2. **Не допускайте спама и флуда в чате. 🚫**\n"
+            "3. **Избегайте оскорблений и агрессивного поведения. 😠**\n"
+            "4. **Соблюдайте тематику каналов. 💬**\n"
+            "5. **Придерживайтесь указаний администрации. 👮**"
+        ),
+        color=discord.Color.from_rgb(255, 153, 51),
     )
     embed.set_footer(
         text="Соблюдение правил - залог приятного общения!",
-        icon_url=(bot.user.avatar.url if bot.user.avatar
-                  else bot.user.default_avatar.url))
+        icon_url=(
+                bot.user.avatar.url
+                if bot.user.avatar
+                else bot.user.default_avatar.url
+            ),
+    )
     await ctx.send(embed=embed)
 
 
 @bot.command(name="clear",
-             description="Очищает указанное количество сообщений "
-                         "(только для администраторов).")
+             description="Очищает указанное количество сообщений.",
+             )
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx: commands.Context, amount: int):
     """Deletes a specified number of messages."""
@@ -130,20 +158,24 @@ async def clear(ctx: commands.Context, amount: int):
         try:
             await ctx.channel.purge(limit=amount + 1)
             embed = discord.Embed(
-                description=(f"**{amount} сообщений успешно удалены. ✅ Чистота - "
-                             "залог порядка!**"),
-                color=discord.Color.from_rgb(153, 255, 153)
+                description=(
+                    f"**{amount} сообщений успешно удалены. ✅ Чистота - "
+                    "залог порядка!**"
+                ),
+                color=discord.Color.from_rgb(153, 255, 153),
             )
             await ctx.send(embed=embed, delete_after=3)
         except discord.errors.Forbidden:
-            await ctx.send("У меня нет прав для удаления сообщений в этом канале.")
+            await ctx.send("У меня нет прав.")
         except Exception as e:
             await ctx.send(f"Произошла ошибка при удалении сообщений: {e}")
     else:
         embed = discord.Embed(
-            description=("**⚠️ Пожалуйста, укажите число сообщений для удаления в "
-                         "диапазоне от 1 до 100. ⚠️**"),
-            color=discord.Color.from_rgb(255, 153, 153)
+            description=(
+                "**⚠️ Пожалуйста, укажите число сообщений для удаления в "
+                "диапазоне от 1 до 100. ⚠️**"
+            ),
+            color=discord.Color.from_rgb(255, 153, 153),
         )
         await ctx.send(embed=embed)
 
@@ -156,24 +188,31 @@ async def wind_conversion(ctx: commands.Context, knots: float):
     embed = discord.Embed(
         title="💨 Конвертация скорости ветра 💨",
         description=f"{knots} узлов = **{kmh:.2f}** км/ч",
-        color=discord.Color.from_rgb(153, 204, 255)
+        color=discord.Color.from_rgb(153, 204, 255),
     )
     embed.set_footer(
         text="Помните о безопасности полетов!",
-        icon_url=(bot.user.avatar.url if bot.user.avatar
-                  else bot.user.default_avatar.url))
+        icon_url=(
+                bot.user.avatar.url
+                if bot.user.avatar
+                else bot.user.default_avatar.url
+            ),
+    )
     await ctx.send(embed=embed)
 
 
 @bot.command(name="wind_calculate",
              help="Рассчитать продольный и боковой компоненты ветра.")
-async def wind_calculate(ctx: commands.Context, wind_metar: str,
-                           runway_heading: int):
+async def wind_calculate(
+        ctx: commands.Context,
+        wind_metar: str,
+        runway_heading: int):
     """Рассчитывает продольный и боковой компоненты ветра.
 
     Args:
         ctx: The command context.
-        wind_metar: Направление и скорость ветра из METAR (например, "09005MPS").
+        wind_metar: Направление и скорость ветра из METAR
+                    (например, "09005MPS").
         runway_heading: Курс полосы (в градусах).
     """
     try:
@@ -193,20 +232,27 @@ async def wind_calculate(ctx: commands.Context, wind_metar: str,
             color=BOT_COLOR,
         )
         embed.add_field(name="Ветер из METAR", value=wind_metar, inline=False)
-        embed.add_field(name="Курс полосы", value=f"{runway_heading}°",
-                        inline=False)
-        embed.add_field(name="Продольный компонент",
-                        value=f"{headwind_component} (попутный/встречный)",
-                        inline=False)
-        embed.add_field(name="Боковой компонент",
-                        value=f"{crosswind_component}", inline=False)
+        embed.add_field(
+            name="Курс полосы",
+            value=f"{runway_heading}°",
+            inline=False)
+        embed.add_field(
+            name="Продольный компонент",
+            value=f"{headwind_component} (попутный/встречный)",
+            inline=False,
+        )
+        embed.add_field(
+            name="Боковой компонент",
+            value=f"{crosswind_component}",
+            inline=False)
 
         await ctx.send(embed=embed)
 
     except ValueError:
-        await ctx.send("Ошибка: Неверный формат данных. Убедитесь, что "
-                       "направление ветра - число от 000 до 360, а курс "
-                       "полосы - целое число.")
+        await ctx.send(
+            "Ошибка: Неверный формат данных. - "
+            "число от 000 до 360, а курс полосы - целое число."
+        )
     except Exception as e:
         await ctx.send(f"Произошла ошибка при расчете: {e}")
 
@@ -214,28 +260,32 @@ async def wind_calculate(ctx: commands.Context, wind_metar: str,
 @bot.command(name="say",
              help="Отправить сообщение от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
-async def say(ctx: commands.Context, channel: discord.TextChannel,
-                *, message: str):
+async def say(
+        ctx: commands.Context,
+        channel: discord.TextChannel,
+        *,
+        message: str):
     """Отправляет сообщение от имени бота в указанный канал.
 
     Args:
         ctx: Контекст команды.
-        channel: Канал, в который нужно отправить сообщение (упоминание канала).
+        channel: Канал, в который нужно отправить сообщение.
         message: Текст сообщения.
     """
     try:
         embed = discord.Embed(
             description=message,
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_footer(
             text=f"Отправлено администратором {ctx.author.name}",
-            icon_url=ctx.author.avatar.url)
+            icon_url=ctx.author.avatar.url,
+        )
         await channel.send(embed=embed)
         await ctx.message.delete()
     except discord.errors.Forbidden:
-        await ctx.send("Ошибка: У меня нет прав на отправку сообщений в этот канал.")
+        await ctx.send("У меня нет прав на отправку сообщений в этот канал.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
@@ -243,21 +293,22 @@ async def say(ctx: commands.Context, channel: discord.TextChannel,
 @bot.command(name="announce",
              help="Отправить объявление от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
-async def announce(ctx: commands.Context, channel: discord.TextChannel,
-                   *, message: str):
+async def announce(
+    ctx: commands.Context, channel: discord.TextChannel, *, message: str
+):
     """Отправляет объявление от имени бота в указанный канал.
 
     Args:
         ctx: Контекст команды.
-        channel: Канал, в который нужно отправить объявление (упоминание канала).
-        message: Текст объявления.
+        channel: Канал, в который нужно отправить объявление.
+        message: Текст сообщения.
     """
     try:
         embed = discord.Embed(
             title=f"{ANNOUNCEMENT_EMOJI} Объявление",
             description=message,
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_footer(text="Объявление от бота")
 
@@ -268,7 +319,7 @@ async def announce(ctx: commands.Context, channel: discord.TextChannel,
         await ctx.message.delete()
 
     except discord.errors.Forbidden:
-        await ctx.send("Ошибка: У меня нет прав на отправку сообщений в этот канал.")
+        await ctx.send("У меня нет прав на отправку сообщений в этот канал.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
@@ -276,8 +327,10 @@ async def announce(ctx: commands.Context, channel: discord.TextChannel,
 @bot.command(name="flight_announce",
              help="Создать объявление об учебных полетах с реакциями.")
 @commands.has_permissions(administrator=True)
-async def flight_announce(ctx: commands.Context, flight_date: str,
-                            flight_time: str):
+async def flight_announce(
+        ctx: commands.Context,
+        flight_date: str,
+        flight_time: str):
     """Creates a flight announcement with reactions."""
     channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
     if not channel:
@@ -288,19 +341,25 @@ async def flight_announce(ctx: commands.Context, flight_date: str,
         embed = discord.Embed(
             title="✈️ Учебные полеты 🚀",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="📅 Дата", value=flight_date, inline=False)
-        embed.add_field(name="🕒 Время", value=f"{flight_time} UTC",
-                        inline=False)
+        embed.add_field(
+            name="🕒 Время",
+            value=f"{flight_time} UTC",
+            inline=False)
         embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
-        embed.add_field(name="👥 Участники",
-                        value=' '.join(ROLES_TO_MENTION), inline=False)
+        embed.add_field(
+            name="👥 Участники", value=" ".join(ROLES_TO_MENTION), inline=False
+        )
         embed.add_field(
             name="ℹ️ Инструкция",
-            value=("Сообщите о своем участии, нажав на реакцию с "
-                   "соответствующим номером упражнения. ⬇️"),
-            inline=False)
+            value=(
+                "Сообщите о своем участии, нажав на реакцию с "
+                "соответствующим номером упражнения. ⬇️"
+            ),
+            inline=False,
+        )
         embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
         embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
@@ -326,12 +385,14 @@ async def kick(ctx: commands.Context, member: discord.Member, *, reason=None):
             title="Выгнан участник",
             description=f"Участник {member.mention} был выгнан с сервера.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if reason:
             embed.add_field(name="Причина", value=reason, inline=False)
         embed.set_footer(
-            text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            text=f"Модератор: {ctx.author.name}",
+            icon_url=ctx.author.avatar.url,
+        )
         await ctx.send(embed=embed)
 
     except discord.errors.Forbidden:
@@ -350,14 +411,16 @@ async def ban(ctx: commands.Context, member: discord.Member, *, reason=None):
         await member.ban(reason=reason)
         embed = discord.Embed(
             title="Забанен участник",
-            description=f"Участник {member.mention} был забанен на сервере.",
+            description=f"Участник {member.mention} был забанен с сервера.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if reason:
             embed.add_field(name="Причина", value=reason, inline=False)
         embed.set_footer(
-            text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            text=f"Модератор: {ctx.author.name}",
+            icon_url=ctx.author.avatar.url,
+        )
         await ctx.send(embed=embed)
     except discord.errors.Forbidden:
         await ctx.send("У меня нет прав для бана этого участника.")
@@ -378,50 +441,64 @@ async def unban(ctx: commands.Context, user_id: int, *, reason=None):
             title="Разбанен участник",
             description=f"Участник с ID {user_id} был разбанен на сервере.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if reason:
             embed.add_field(name="Причина", value=reason, inline=False)
         embed.set_footer(
-            text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            text=f"Модератор: {ctx.author.name}",
+            icon_url=ctx.author.avatar.url,
+        )
         await ctx.send(embed=embed)
-    except discord.errors.NotFound:
-        await ctx.send("Участник не найден в списке забаненных.")
     except discord.errors.Forbidden:
         await ctx.send("У меня нет прав для разбана участников.")
+    except discord.errors.NotFound:
+        await ctx.send("Участник не найден в списке забаненных.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при разбане: {e}")
 
 
 @bot.command(name="mute", help="Замутить участника на определенное время.")
 @commands.has_permissions(manage_roles=True)
-async def mute(ctx: commands.Context, member: discord.Member, duration: str,
-                *, reason=None):
+async def mute(
+        ctx: commands.Context,
+        member: discord.Member,
+        duration: str,
+        *,
+        reason=None):
     """Mutes a member for a specified duration."""
     muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
     if not muted_role:
-        await ctx.send("Роль 'Muted' не найдена. Пожалуйста, создайте роль с "
-                       "названием 'Muted' и настройте ее права доступа.")
+        await ctx.send(
+            "Роль 'Muted' не найдена. Пожалуйста, создайте роль с названием "
+            "'Muted' и настройте ее права доступа."
+        )
         return
 
     seconds = parse_duration(duration)
     if seconds is None:
-        await ctx.send("Неверный формат продолжительности. Используйте, например, "
-                       "'1m', '5h', '1d'.")
+        await ctx.send(
+            "Неверный формат продолжительности. Используйте, например, '1m', "
+            "'5h', '1d'."
+        )
         return
 
     try:
         await member.add_role(muted_role, reason=reason)
         embed = discord.Embed(
             title="Замучен участник",
-            description=f"Участник {member.mention} был замучен на {duration}.",
+            description=f"Участник {
+                member.mention} был замучен на {duration}.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(
+                datetime.timezone.utc),
         )
         if reason:
             embed.add_field(name="Причина", value=reason, inline=False)
         embed.set_footer(
-            text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            text=f"Модератор: {ctx.author.name}",
+            icon_url=ctx.author.avatar.url,
+        )
         await ctx.send(embed=embed)
 
         await asyncio.sleep(seconds)
@@ -431,23 +508,29 @@ async def mute(ctx: commands.Context, member: discord.Member, duration: str,
             title="Время мута истекло",
             description=f"У участника {member.mention} истек срок мута.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         await ctx.send(embed=embed)
     except discord.errors.Forbidden:
-        await ctx.send("У меня нет прав для управления ролями этого участника.")
+        await ctx.send("У меня нет прав")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при муте: {e}")
 
 
 @bot.command(name="unmute", help="Снять мут с участника.")
 @commands.has_permissions(manage_roles=True)
-async def unmute(ctx: commands.Context, member: discord.Member, *, reason=None):
+async def unmute(
+        ctx: commands.Context,
+        member: discord.Member,
+        *,
+        reason=None):
     """Removes the mute from a member."""
     muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
     if not muted_role:
-        await ctx.send("Роль 'Muted' не найдена. Пожалуйста, создайте роль с "
-                       "названием 'Muted' и настройте ее права доступа.")
+        await ctx.send(
+            "Роль 'Muted' не найдена. Пожалуйста, создайте роль с названием "
+            "'Muted' и настройте ее права доступа."
+        )
         return
 
     try:
@@ -456,15 +539,17 @@ async def unmute(ctx: commands.Context, member: discord.Member, *, reason=None):
             title="Снят мут",
             description=f"С участника {member.mention} был снят мут.",
             color=BOT_COLOR,
-            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if reason:
             embed.add_field(name="Причина", value=reason, inline=False)
         embed.set_footer(
-            text=f"Модератор: {ctx.author.name}", icon_url=ctx.author.avatar.url)
+            text=f"Модератор: {ctx.author.name}",
+            icon_url=ctx.author.avatar.url,
+        )
         await ctx.send(embed=embed)
     except discord.errors.Forbidden:
-        await ctx.send("У меня нет прав для управления ролями этого участника.")
+        await ctx.send("У меня нет прав")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при снятии мута: {e}")
 

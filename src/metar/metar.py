@@ -54,8 +54,9 @@ async def weather_command(ctx: commands.Context, icao: str):
         try:
             root = ET.fromstring(xml_content)
         except ET.ParseError:
-            await ctx.send(f"Error parsing XML data for {icao}. The server "
-                           "might be down or the data is malformed.")
+            await ctx.send(
+                f"Error parsing XML data for {icao}. The server might be "
+                "down or the data is malformed.")
             return
 
         metar_element = root.find('metar')
@@ -78,7 +79,7 @@ async def weather_command(ctx: commands.Context, icao: str):
     except requests.exceptions.RequestException as e:
         await ctx.send(
             f"Error fetching data for {icao}. Check the ICAO code, or the "
-            "metartaf.ru service may be unavailable. Error: {e}")
+            f"metartaf.ru service may be unavailable. Error: {e}")
     except Exception as e:
         await ctx.send(f"An unexpected error occurred for {icao}: {e}")
 

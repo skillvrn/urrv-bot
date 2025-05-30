@@ -1,7 +1,5 @@
 import os
-import asyncio
 import datetime
-
 import discord
 from discord.ext import commands, tasks
 import aiohttp
@@ -71,7 +69,7 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
 # --- Background Tasks ---
 @tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
 async def monitor_positions():
-    """Checks the website for active positions and sends Discord notifications."""
+    """Checks the website for active positions."""
     channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
     if not channel:
         print(f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID})"
@@ -143,7 +141,7 @@ async def before_monitor_positions():
 # --- Events ---
 @bot.event
 async def on_ready():
-    """Prints a message when the bot is ready and starts the background task."""
+    """Prints a message when the bot."""
     print(f"Bot {bot.user.name} ready!")
     monitor_positions.start()
 
