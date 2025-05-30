@@ -1,45 +1,54 @@
+import os
+import asyncio
+import datetime
 import discord
 from discord.ext import commands, tasks
 import aiohttp
 from bs4 import BeautifulSoup
-import asyncio
-import datetime
-import os
 
-# --- Настройки ---
+# --- Configuration ---
 BOT_PREFIX = "/"
-POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID'))
+POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID', 0))  # Default to 0
 XR_SITE_URL = "https://xr.ivao.aero/"
-CHECK_INTERVAL_SECONDS = 60  # Как часто проверять сайт
+CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
-
-# --- Получение токена ---
 TOKEN = os.getenv('DISCORD_TOKEN')
+if not TOKEN:
+    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
 
-# --- Инициализация бота ---
+# --- Bot Initialization ---
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
 
-# --- Глобальные переменные ---
+# --- Global Variables ---
 monitored_positions = {}  # {position: start_time}
 
-async def get_positions_from_site(session):
-    """Извлекает список позиций, начинающихся с 'UR', с сайта."""
+# --- Helper Functions ---
+async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
+    """
+    Retrieves a list of positions starting with 'UR' from the website.
+
+    Args:
+        session: The aiohttp client session.
+
+    Returns:
+        A list of positions (strings). Returns an empty list on error.
+    """
     try:
-        async with session.get(XR_SITE_URL) as response:
+        async with session.get(XR_SITE_URL, timeout=10) as response:  # Add timeout
             if response.status == 200:
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
 
-                # Ищем таблицу
+                # Find the table
                 table = soup.find('table')
                 if not table:
-                    print("Таблица не найдена!")
+                    print("Table not found on the website!")
                     return []
 
                 positions = []
-                for row in table.find_all('tr')[1:]:
+                for row in table.find_all('tr')[1:]:  # Skip header row
                     cells = row.find_all('td')
                     if cells:
                         position = cells[0].text.strip()
@@ -47,75 +56,93 @@ async def get_positions_from_site(session):
                             positions.append(position)
                 return positions
             else:
-                print(f"Ошибка при доступе к сайту {XR_SITE_URL}: {response.status}")
+                print(f"Error accessing {XR_SITE_URL}: {response.status}")
                 return []
     except aiohttp.ClientError as e:
-        print(f"Ошибка подключения к {XR_SITE_URL}: {e}")
+        print(f"Connection error to {XR_SITE_URL}: {e}")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred while scraping the website: {e}")  # Catch any other errors
         return []
 
-# --- Фоновые задачи ---
+
+# --- Background Tasks ---
 @tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
 async def monitor_positions():
-    """Проверяет сайт на наличие позиций и отправляет уведомления."""
+    """
+    Checks the website for active positions and sends Discord notifications.
+    """
     channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
     if not channel:
-        print("Канал для объявлений не найден!")
+        print(f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID}) not found!")
         return
 
-    async with aiohttp.ClientSession() as session:
-        current_positions = await get_positions_from_site(session)
+    try:
+        async with aiohttp.ClientSession() as session:
+            current_positions = await get_positions_from_site(session)
 
-    # 1. Новые позиции
-    for position in current_positions:
-        if position not in monitored_positions:
-            monitored_positions[position] = datetime.datetime.now()
-            embed = discord.Embed(
-                title="✅ Позиция онлайн!",
-                description=f"Позиция {position} начала работу.",
-                color=BOT_COLOR,
-                timestamp=monitored_positions[position]
-            )
-            try:
-                await channel.send(embed=embed)
-            except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+        # 1. New positions
+        for position in current_positions:
+            if position not in monitored_positions:
+                monitored_positions[position] = datetime.datetime.now()
+                embed = discord.Embed(
+                    title="✅ Position Online!",
+                    description=f"Position {position} is now online.",
+                    color=BOT_COLOR,
+                    timestamp=monitored_positions[position]
+                )
+                try:
+                    await channel.send(embed=embed)
+                except discord.errors.Forbidden:
+                    print(f"Missing permissions to send messages in channel {channel.id}") # More specific logging.
+                except Exception as e:
+                    print(f"Error sending message for online position {position}: {e}")
 
-    # 2. Завершение работы позиций
-    ended_positions = []
-    for position, start_time in monitored_positions.items():
-        if position not in current_positions:
-            ended_positions.append(position)
-            end_time = datetime.datetime.now()
-            duration = end_time - start_time
-            hours, remainder = divmod(duration.total_seconds(), 3600)
-            minutes, seconds = divmod(remainder, 60)
-            duration_str = f"{int(hours)}ч {int(minutes)}м {int(seconds)}с"
+        # 2. Positions that have ended
+        ended_positions = []
+        for position, start_time in monitored_positions.items():
+            if position not in current_positions:
+                ended_positions.append(position)
+                end_time = datetime.datetime.now()
+                duration = end_time - start_time
+                hours, remainder = divmod(duration.total_seconds(), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                duration_str = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
-            embed = discord.Embed(
-                title="❌ Позиция завершила работу",
-                description=f"Позиция {position} закончила работу.",
-                color=BOT_COLOR,
-                timestamp=end_time
-            )
-            embed.add_field(name="Время работы", value=duration_str, inline=False)
-            try:
-                await channel.send(embed=embed)
-            except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+                embed = discord.Embed(
+                    title="❌ Position Offline",
+                    description=f"Position {position} has gone offline.",
+                    color=BOT_COLOR,
+                    timestamp=end_time
+                )
+                embed.add_field(name="Online Time", value=duration_str, inline=False)
+                try:
+                    await channel.send(embed=embed)
+                except discord.errors.Forbidden:
+                    print(f"Missing permissions to send messages in channel {channel.id}")
+                except Exception as e:
+                    print(f"Error sending message for offline position {position}: {e}")
 
-    # Очистка
-    for position in ended_positions:
-        del monitored_positions[position]
+        # Cleanup
+        for position in ended_positions:
+            del monitored_positions[position]
+
+    except Exception as e:
+        print(f"An error occurred in the monitor_positions task: {e}")  # Catch all errors within the task
+
 
 @monitor_positions.before_loop
 async def before_monitor_positions():
+    """Waits until the bot is ready before starting the background task."""
     await bot.wait_until_ready()
 
-# --- События ---
+
+# --- Events ---
 @bot.event
 async def on_ready():
-    print(f"Бот {bot.user.name} готов!")
+    """Prints a message when the bot is ready and starts the background task."""
+    print(f"Bot {bot.user.name} ready!")
     monitor_positions.start()
 
-# --- Запуск бота ---
+# --- Run the Bot ---
 bot.run(TOKEN)
