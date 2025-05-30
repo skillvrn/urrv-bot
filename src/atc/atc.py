@@ -1,6 +1,7 @@
 import os
 import asyncio
 import datetime
+
 import discord
 from discord.ext import commands, tasks
 import aiohttp
@@ -8,13 +9,15 @@ from bs4 import BeautifulSoup
 
 # --- Configuration ---
 BOT_PREFIX = "/"
-POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID', 0))  # Default to 0
+POSITION_ANNOUNCEMENT_CHANNEL_ID = int(
+    os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID', 0))
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
 TOKEN = os.getenv('DISCORD_TOKEN')
 if not TOKEN:
-    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
+    raise ValueError(
+        "DISCORD_TOKEN not found in environment variables. Please set it.")
 
 # --- Bot Initialization ---
 intents = discord.Intents.default()
@@ -24,10 +27,10 @@ bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
 # --- Global Variables ---
 monitored_positions = {}  # {position: start_time}
 
+
 # --- Helper Functions ---
 async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
-    """
-    Retrieves a list of positions starting with 'UR' from the website.
+    """Retrieves a list of positions starting with 'UR' from the website.
 
     Args:
         session: The aiohttp client session.
@@ -36,19 +39,18 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
         A list of positions (strings). Returns an empty list on error.
     """
     try:
-        async with session.get(XR_SITE_URL, timeout=10) as response:  # Add timeout
+        async with session.get(XR_SITE_URL, timeout=10) as response:
             if response.status == 200:
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
 
-                # Find the table
                 table = soup.find('table')
                 if not table:
                     print("Table not found on the website!")
                     return []
 
                 positions = []
-                for row in table.find_all('tr')[1:]:  # Skip header row
+                for row in table.find_all('tr')[1:]:
                     cells = row.find_all('td')
                     if cells:
                         position = cells[0].text.strip()
@@ -62,26 +64,24 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
         print(f"Connection error to {XR_SITE_URL}: {e}")
         return []
     except Exception as e:
-        print(f"An unexpected error occurred while scraping the website: {e}")  # Catch any other errors
+        print(f"An unexpected error occurred while scraping the website: {e}")
         return []
 
 
 # --- Background Tasks ---
 @tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
 async def monitor_positions():
-    """
-    Checks the website for active positions and sends Discord notifications.
-    """
+    """Checks the website for active positions and sends Discord notifications."""
     channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
     if not channel:
-        print(f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID}) not found!")
+        print(f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID})"
+              " not found!")
         return
 
     try:
         async with aiohttp.ClientSession() as session:
             current_positions = await get_positions_from_site(session)
 
-        # 1. New positions
         for position in current_positions:
             if position not in monitored_positions:
                 monitored_positions[position] = datetime.datetime.now()
@@ -94,11 +94,12 @@ async def monitor_positions():
                 try:
                     await channel.send(embed=embed)
                 except discord.errors.Forbidden:
-                    print(f"Missing permissions to send messages in channel {channel.id}") # More specific logging.
+                    print(f"Missing permissions to send messages in channel "
+                          f"{channel.id}")
                 except Exception as e:
-                    print(f"Error sending message for online position {position}: {e}")
+                    print(f"Error sending message for online position"
+                          f" {position}: {e}")
 
-        # 2. Positions that have ended
         ended_positions = []
         for position, start_time in monitored_positions.items():
             if position not in current_positions:
@@ -115,20 +116,22 @@ async def monitor_positions():
                     color=BOT_COLOR,
                     timestamp=end_time
                 )
-                embed.add_field(name="Online Time", value=duration_str, inline=False)
+                embed.add_field(name="Online Time", value=duration_str,
+                                inline=False)
                 try:
                     await channel.send(embed=embed)
                 except discord.errors.Forbidden:
-                    print(f"Missing permissions to send messages in channel {channel.id}")
+                    print(f"Missing permissions to send messages in channel "
+                          f"{channel.id}")
                 except Exception as e:
-                    print(f"Error sending message for offline position {position}: {e}")
+                    print(f"Error sending message for offline position"
+                          f" {position}: {e}")
 
-        # Cleanup
         for position in ended_positions:
             del monitored_positions[position]
 
     except Exception as e:
-        print(f"An error occurred in the monitor_positions task: {e}")  # Catch all errors within the task
+        print(f"An error occurred in the monitor_positions task: {e}")
 
 
 @monitor_positions.before_loop
@@ -143,6 +146,7 @@ async def on_ready():
     """Prints a message when the bot is ready and starts the background task."""
     print(f"Bot {bot.user.name} ready!")
     monitor_positions.start()
+
 
 # --- Run the Bot ---
 bot.run(TOKEN)
