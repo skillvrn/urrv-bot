@@ -8,14 +8,14 @@ from bs4 import BeautifulSoup
 # --- Configuration ---
 BOT_PREFIX = "/"
 POSITION_ANNOUNCEMENT_CHANNEL_ID = int(
-    os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID', 0))
+    os.getenv("DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID", 0)
+)
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
-    raise ValueError(
-        "DISCORD_TOKEN not found in environment variables. Please set it.")
+    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
 
 # --- Bot Initialization ---
 intents = discord.Intents.default()
@@ -40,16 +40,16 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> list[str]:
         async with session.get(XR_SITE_URL, timeout=10) as response:
             if response.status == 200:
                 html = await response.text()
-                soup = BeautifulSoup(html, 'html.parser')
+                soup = BeautifulSoup(html, "html.parser")
 
-                table = soup.find('table')
+                table = soup.find("table")
                 if not table:
                     print("Table not found on the website!")
                     return []
 
                 positions = []
-                for row in table.find_all('tr')[1:]:
-                    cells = row.find_all('td')
+                for row in table.find_all("tr")[1:]:
+                    cells = row.find_all("td")
                     if cells:
                         position = cells[0].text.strip()
                         if position.startswith("UR"):
@@ -72,8 +72,10 @@ async def monitor_positions():
     """Checks the website for active positions."""
     channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
     if not channel:
-        print(f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID})"
-              " not found!")
+        print(
+            f"Announcement channel (ID: {POSITION_ANNOUNCEMENT_CHANNEL_ID})"
+            " not found!"
+        )
         return
 
     try:
@@ -87,16 +89,19 @@ async def monitor_positions():
                     title="✅ Position Online!",
                     description=f"Position {position} is now online.",
                     color=BOT_COLOR,
-                    timestamp=monitored_positions[position]
+                    timestamp=monitored_positions[position],
                 )
                 try:
                     await channel.send(embed=embed)
                 except discord.errors.Forbidden:
-                    print(f"Missing permissions to send messages in channel "
-                          f"{channel.id}")
+                    print(
+                        f"Missing permissions to send messages in channel "
+                        f"{channel.id}"
+                    )
                 except Exception as e:
-                    print(f"Error sending message for online position"
-                          f" {position}: {e}")
+                    print(
+                        f"Error sending message for online position" f" {position}: {e}"
+                    )
 
         ended_positions = []
         for position, start_time in monitored_positions.items():
@@ -112,18 +117,21 @@ async def monitor_positions():
                     title="❌ Position Offline",
                     description=f"Position {position} has gone offline.",
                     color=BOT_COLOR,
-                    timestamp=end_time
+                    timestamp=end_time,
                 )
-                embed.add_field(name="Online Time", value=duration_str,
-                                inline=False)
+                embed.add_field(name="Online Time", value=duration_str, inline=False)
                 try:
                     await channel.send(embed=embed)
                 except discord.errors.Forbidden:
-                    print(f"Missing permissions to send messages in channel "
-                          f"{channel.id}")
+                    print(
+                        f"Missing permissions to send messages in channel "
+                        f"{channel.id}"
+                    )
                 except Exception as e:
-                    print(f"Error sending message for offline position"
-                          f" {position}: {e}")
+                    print(
+                        f"Error sending message for offline position"
+                        f" {position}: {e}"
+                    )
 
         for position in ended_positions:
             del monitored_positions[position]
