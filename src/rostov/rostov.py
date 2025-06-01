@@ -3,16 +3,15 @@ import re
 import asyncio
 import datetime
 import math
-
 import discord
 from discord.ext import commands
 
 # --- Настройки ---
 BOT_PREFIX = "/"
-WELCOME_CHANNEL_ID = int(os.getenv("DISCORD_WELCOME_CHANNEL_ID", 0))
-ATO_NEWS_CHANNEL_ID = int(os.getenv("DISCORD_ATO_NEWS_CHANNEL_ID", 0))
+WELCOME_CHANNEL_ID = int(os.getenv('DISCORD_WELCOME_CHANNEL_ID'))
+ATO_NEWS_CHANNEL_ID = int(os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID'))
 ANNOUNCEMENT_EMOJI = "📢"
-ROLES_TO_MENTION = ["Курсанты"]
+ROLES_TO_MENTION = ["@Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
 FLIGHT_ANNOUNCE_IMAGE_URL = (

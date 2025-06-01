@@ -7,9 +7,7 @@ from bs4 import BeautifulSoup
 
 # --- Configuration ---
 BOT_PREFIX = "/"
-POSITION_ANNOUNCEMENT_CHANNEL_ID = int(
-    os.getenv("DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID", 0)
-)
+POSITION_ANNOUNCEMENT_CHANNEL_ID = int(os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID'))
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
