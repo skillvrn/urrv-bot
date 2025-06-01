@@ -498,7 +498,6 @@ async def mute(
         await ctx.send(embed=embed)
 
         await asyncio.sleep(seconds)
-
         await member.remove_role(muted_role, reason="Время мута истекло")
         embed = discord.Embed(
             title="Время мута истекло",
