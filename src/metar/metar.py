@@ -9,7 +9,7 @@ from discord.ext import commands
 ICAO_REGEX = r"^[A-Z]{4}$"
 BOT_TOKEN = os.getenv("DISCORD_TOKEN")
 if not BOT_TOKEN:
-    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
+    raise ValueError("DISCORD_TOKEN not found in environment variables.")
 
 # --- Bot Setup ---
 intents = discord.Intents.default()
@@ -27,7 +27,7 @@ async def on_ready():
 # --- Commands ---
 @bot.command(
     name="weather",
-    description="Get METAR and TAF data for an ICAO airport from " "metartaf.ru",
+    description="Get METAR and TAF data for an ICAO airport",
 )
 async def weather_command(ctx: commands.Context, icao: str):
     """Gets METAR and TAF data for a given ICAO airport from metartaf.ru.
@@ -40,7 +40,7 @@ async def weather_command(ctx: commands.Context, icao: str):
 
     if not re.match(ICAO_REGEX, icao):
         await ctx.send(
-            "Invalid ICAO code format. Please use a 4-letter code " "(e.g., UUDD)."
+            "Invalid ICAO code format. Please use a 4-letter code"
         )
         return
 

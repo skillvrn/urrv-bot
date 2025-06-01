@@ -15,7 +15,7 @@ CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
-    raise ValueError("DISCORD_TOKEN not found in environment variables. Please set it.")
+    raise ValueError("DISCORD_TOKEN not found in environment variables.")
 
 # --- Bot Initialization ---
 intents = discord.Intents.default()
@@ -100,7 +100,7 @@ async def monitor_positions():
                     )
                 except Exception as e:
                     print(
-                        f"Error sending message for online position" f" {position}: {e}"
+                        f"Error sending message" f" {position}: {e}"
                     )
 
         ended_positions = []
@@ -119,7 +119,9 @@ async def monitor_positions():
                     color=BOT_COLOR,
                     timestamp=end_time,
                 )
-                embed.add_field(name="Online Time", value=duration_str, inline=False)
+                embed.add_field(name="Online Time",
+                                value=duration_str,
+                                inline=False)
                 try:
                     await channel.send(embed=embed)
                 except discord.errors.Forbidden:
