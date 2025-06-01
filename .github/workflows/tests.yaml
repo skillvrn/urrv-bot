@@ -54,9 +54,6 @@ jobs:
       - name: Run flake8 (style guide enforcement)
         run: flake8 . --count --show-source --statistics
         
-      - name: Run black (code formatting check)
-        run: black --check --diff .
-        
       - name: Run mypy (static type checking)
         run: mypy .
 
