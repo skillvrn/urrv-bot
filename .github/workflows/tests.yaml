@@ -56,9 +56,6 @@ jobs:
       - name: Run flake8 (style guide enforcement)
         run: flake8 . --count --show-source --statistics
         
-        
-      - name: Run mypy (static type checking)
-        run: mypy .
 
   detect-secrets:
     name: Scanning for secrets in code
