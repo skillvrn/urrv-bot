@@ -9,8 +9,10 @@ from typing import Optional
 
 # --- Настройки ---
 BOT_PREFIX = "/"
-WELCOME_CHANNEL_ID: Optional[int] = int(os.getenv('DISCORD_WELCOME_CHANNEL_ID') or 0)
-ATO_NEWS_CHANNEL_ID: Optional[int] = int(os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID') or 0)
+WELCOME_CHANNEL_ID: Optional[int] = int(
+    os.getenv('DISCORD_WELCOME_CHANNEL_ID') or 0)
+ATO_NEWS_CHANNEL_ID: Optional[int] = int(
+    os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID') or 0)
 ANNOUNCEMENT_EMOJI = "📢"
 ROLES_TO_MENTION = ["@Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
@@ -53,7 +55,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member: discord.Member):
     """Welcomes new members to the server."""
-    if WELCOME_CHANNEL_ID: # Check if channel ID is not None or 0
+    if WELCOME_CHANNEL_ID:  # Check if channel ID is not None or 0
         channel = bot.get_channel(WELCOME_CHANNEL_ID)
         if channel:
             embed = discord.Embed(
@@ -70,8 +72,8 @@ async def on_member_join(member: discord.Member):
             await channel.send(embed=embed)
         else:
             print(
-                f"WARNING: Welcome channel (ID: {WELCOME_CHANNEL_ID}) not found."
-            )
+                f"WARNING: Welcome channel "
+                f"(ID: {WELCOME_CHANNEL_ID}) not found.")
     else:
         print("WARNING: WELCOME_CHANNEL_ID not set, skipping welcome message.")
 
@@ -341,7 +343,7 @@ async def flight_announce(
         flight_date: str,
         flight_time: str):
     """Creates a flight announcement with reactions."""
-    if ATO_NEWS_CHANNEL_ID: # Check if channel ID is not None or 0
+    if ATO_NEWS_CHANNEL_ID:  # Check if channel ID is not None or 0
         channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
         if not channel:
             await ctx.send("Ошибка: Канал #ato-news не найден.")
@@ -361,8 +363,9 @@ async def flight_announce(
             )
             embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
             embed.add_field(
-                name="👥 Участники", value=" ".join(ROLES_TO_MENTION), inline=False
-            )
+                name="👥 Участники",
+                value=" ".join(ROLES_TO_MENTION),
+                inline=False)
             embed.add_field(
                 name="ℹ️ Инструкция",
                 value=(
@@ -371,7 +374,8 @@ async def flight_announce(
                 ),
                 inline=False,
             )
-            embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
+            embed.set_footer(
+                text="Нажмите на реакцию, чтобы сообщить об участии")
             embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
             message = await channel.send(embed=embed)
@@ -380,17 +384,22 @@ async def flight_announce(
             await ctx.message.delete()
 
         except discord.errors.Forbidden:
-            await ctx.send("У меня нет прав для отправки сообщений в этот канал.")
+            await ctx.send("У меня нет прав.")
         except Exception as e:
             await ctx.send(f"Произошла ошибка при создании объявления: {e}")
     else:
-        await ctx.send("ATO_NEWS_CHANNEL_ID is not set, skipping flight announcement.")
+        await ctx.send("ATO_NEWS_CHANNEL_ID is not set, "
+                       "skipping flight announcement.")
 
 
 # --- Модерация ---
 @bot.command(name="kick", help="Выгнать участника с сервера.")
 @commands.has_permissions(kick_members=True)
-async def kick(ctx: commands.Context, member: discord.Member, *, reason: Optional[str]=None):
+async def kick(
+        ctx: commands.Context,
+        member: discord.Member,
+        *,
+        reason: Optional[str] = None):
     """Kicks a member from the server."""
     try:
         await member.kick(reason=reason)
@@ -422,7 +431,11 @@ async def kick(ctx: commands.Context, member: discord.Member, *, reason: Optiona
 
 @bot.command(name="ban", help="Забанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
-async def ban(ctx: commands.Context, member: discord.Member, *, reason: Optional[str]=None):
+async def ban(
+        ctx: commands.Context,
+        member: discord.Member,
+        *,
+        reason: Optional[str] = None):
     """Bans a member from the server."""
     try:
         await member.ban(reason=reason)
@@ -453,7 +466,11 @@ async def ban(ctx: commands.Context, member: discord.Member, *, reason: Optional
 
 @bot.command(name="unban", help="Разбанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
-async def unban(ctx: commands.Context, user_id: int, *, reason: Optional[str]=None):
+async def unban(
+        ctx: commands.Context,
+        user_id: int,
+        *,
+        reason: Optional[str] = None):
     """Unbans a user from the server."""
     try:
         user = discord.Object(id=user_id)
@@ -490,7 +507,7 @@ async def mute(
         member: discord.Member,
         duration: str,
         *,
-        reason: Optional[str]=None):
+        reason: Optional[str] = None):
     """Mutes a member for a specified duration."""
     muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
     if not muted_role:
@@ -551,7 +568,7 @@ async def unmute(
         ctx: commands.Context,
         member: discord.Member,
         *,
-        reason: Optional[str]=None):
+        reason: Optional[str] = None):
     """Removes the mute from a member."""
     muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
     if not muted_role:
