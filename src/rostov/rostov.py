@@ -14,7 +14,7 @@ WELCOME_CHANNEL_ID: Optional[int] = int(
 ATO_NEWS_CHANNEL_ID: Optional[int] = int(
     os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID') or 0)
 ANNOUNCEMENT_EMOJI = "📢"
-ROLES_TO_MENTION = ["@Курсанты"]
+ROLES_TO_MENTION = ["Курсанты"]
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
 FLIGHT_ANNOUNCE_IMAGE_URL = (

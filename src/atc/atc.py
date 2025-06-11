@@ -5,14 +5,17 @@ from discord.ext import commands, tasks
 import aiohttp
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
+import re  # Импортируем модуль re
 
 # --- Configuration ---
-BOT_PREFIX = "/"
+BOT_PREFIX = "!"
 POSITION_ANNOUNCEMENT_CHANNEL_ID: Optional[int] = int(
     os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID') or 0)
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
+EMOJI_ID = 1382385111651320011  # Replace with your actual emoji ID
+EMOJI_NAME = "Aurora"  # Replace with your actual emoji name
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     raise ValueError("DISCORD_TOKEN not found in environment variables.")
@@ -23,145 +26,117 @@ intents.message_content = True
 bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
 
 # --- Global Variables ---
-# {position: start_time}
 monitored_positions: Dict[str, datetime.datetime] = {}
-
+announcement_message: Optional[discord.Message] = None
 
 # --- Helper Functions ---
-async def get_positions_from_site(session: aiohttp.ClientSession) -> List[str]:
-    """Retrieves a list of positions starting with 'UR' from the website.
-
-    Args:
-        session: The aiohttp client session.
-
-    Returns:
-        A list of positions (strings). Returns an empty list on error.
-    """
+async def get_positions_from_site(session: aiohttp.ClientSession) -> List[Dict[str, str]]:
+    """Retrieves positions and their data."""
     try:
         async with session.get(XR_SITE_URL, timeout=10) as response:
             if response.status == 200:
                 html = await response.text()
                 soup = BeautifulSoup(html, "html.parser")
-
                 table = soup.find("table")
                 if not table:
-                    print("Table not found on the website!")
+                    print("Table not found!")
                     return []
 
-                positions: List[str] = []  # Add type annotation
+                positions_data: List[Dict[str, str]] = []
                 for row in table.find_all("tr")[1:]:
                     cells = row.find_all("td")
-                    if cells:
+                    if cells and len(cells) >= 2:
                         position = cells[0].text.strip()
                         if position.startswith("UR"):
-                            positions.append(position)
-                return positions
+                            data = cells[1].text.strip()
+                            positions_data.append({"position": position, "data": data})
+                return positions_data
             else:
-                print(f"Error accessing {XR_SITE_URL}: {response.status}")
+                print(f"HTTP Error: {response.status}")
                 return []
     except aiohttp.ClientError as e:
-        print(f"Connection error to {XR_SITE_URL}: {e}")
+        print(f"Connection Error: {e}")
         return []
     except Exception as e:
-        print(f"An unexpected error occurred while scraping the website: {e}")
+        print(f"Scraping Error: {e}")
         return []
 
+async def build_position_list_embed(positions_data: List[Dict[str, str]]) -> discord.Embed:
+    """Builds the embed with formatted position data."""
+    emoji = f"<:{EMOJI_NAME}:{EMOJI_ID}>"  # Formatted emoji here
+    embed = discord.Embed(
+        title=f"{emoji} **Active URRV FIR Positions** {emoji}",  # Line 64 Added Emojis!
+        color=BOT_COLOR,
+        timestamp=datetime.datetime.now()
+    )
+    if positions_data:
+        for item in positions_data:
+            position = item['position']
+            data = item['data']
+
+            # Extract the VID and Frequency
+            match = re.search(r"(\d{6}).*?(\d+\.\d+)Mhz", data)  # Find 6 digits, then frequency before "Mhz"
+
+            if match:
+                vid = match.group(1)
+                frequency = match.group(2)
+                value = f"{position} - {frequency} - VID({vid})"
+            else:
+                value = f"{position} - Data not Parsed"  # If no match found in the string
+
+            embed.add_field(name="", value=value, inline=False)  # Empty name!
+    else:
+        embed.description = "😴 No active URRV FIR positions found."
+    embed.set_footer(text="Updated every minute")
+    return embed
 
 # --- Background Tasks ---
 @tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
 async def monitor_positions():
-    """Checks the website for active positions."""
-    if POSITION_ANNOUNCEMENT_CHANNEL_ID:  # Check if channel ID is set
+    """Monitors and updates the announcement."""
+    global announcement_message
+    if POSITION_ANNOUNCEMENT_CHANNEL_ID:
         channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
         if not channel:
-            print(
-                f"Announcement channel (ID: "
-                f"{POSITION_ANNOUNCEMENT_CHANNEL_ID})"
-                " not found!"
-            )
+            print("Channel not found!")
             return
 
         try:
             async with aiohttp.ClientSession() as session:
-                current_positions = await get_positions_from_site(session)
+                current_positions_data = await get_positions_from_site(session)
 
-            for position in current_positions:
-                if position not in monitored_positions:
-                    monitored_positions[position] = datetime.datetime.now()
-                    embed = discord.Embed(
-                        title="✅ Position Online!",
-                        description=f"Position {position} is now online.",
-                        color=BOT_COLOR,
-                        timestamp=monitored_positions[position],
-                    )
-                    try:
-                        await channel.send(embed=embed)
-                    except discord.errors.Forbidden:
-                        print(
-                            f"Missing permissions to send messages in channel "
-                            f"{channel.id}"
-                        )
-                    except Exception as e:
-                        print(
-                            f"Error sending message" f" {position}: {e}"
-                        )
+            embed = await build_position_list_embed(current_positions_data)
 
-            ended_positions = []
-            for position, start_time in monitored_positions.items():
-                if position not in current_positions:
-                    ended_positions.append(position)
-                    end_time = datetime.datetime.now()
-                    duration = end_time - start_time
-                    hours, remainder = divmod(duration.total_seconds(), 3600)
-                    minutes, seconds = divmod(remainder, 60)
-                    duration_str = f"{
-                        int(hours)}h {
-                        int(minutes)}m {
-                        int(seconds)}s"
-
-                    embed = discord.Embed(
-                        title="❌ Position Offline",
-                        description=f"Position {position} has gone offline.",
-                        color=BOT_COLOR,
-                        timestamp=end_time,
-                    )
-                    embed.add_field(name="Online Time",
-                                    value=duration_str,
-                                    inline=False)
-                    try:
-                        await channel.send(embed=embed)
-                    except discord.errors.Forbidden:
-                        print(
-                            f"Missing permissions to send messages in channel "
-                            f"{channel.id}"
-                        )
-                    except Exception as e:
-                        print(
-                            f"Error sending message for offline position"
-                            f" {position}: {e}"
-                        )
-
-            for position in ended_positions:
-                del monitored_positions[position]
+            if announcement_message:
+                try:
+                    await announcement_message.edit(embed=embed)  # Edit embed
+                except discord.errors.NotFound:
+                    print("Message not found, creating a new one.")
+                    announcement_message = await channel.send(embed=embed)
+                except discord.errors.Forbidden:
+                    print("Missing permissions to edit message.")
+                except Exception as e:
+                    print(f"Edit Error: {e}")
+            else:
+                try:
+                    announcement_message = await channel.send(embed=embed)  # Create the embed
+                except discord.errors.Forbidden:
+                    print("Missing permissions to send message.")
+                except Exception as e:
+                    print(f"Send Error: {e}")
 
         except Exception as e:
-            print(f"An error occurred in the monitor_positions task: {e}")
+            print(f"Task Error: {e}")
     else:
-        print("WARNING: POSITION_ANNOUNCEMENT_CHANNEL_ID not set, "
-              "skipping position monitoring.")
-
+        print("Channel ID not set, skipping.")
 
 @monitor_positions.before_loop
 async def before_monitor_positions():
-    """Waits until the bot is ready before starting the background task."""
     await bot.wait_until_ready()
 
 # --- Events ---
-
-
 @bot.event
 async def on_ready():
-    """Prints a message when the bot ."""
     print(f"Bot {bot.user.name} ready!")
     monitor_positions.start()
 
