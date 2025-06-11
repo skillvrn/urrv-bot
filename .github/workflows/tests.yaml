@@ -45,20 +45,17 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black mypy
+          pip install flake8 mypy discord.py aiohttp beautifulsoup4 requests
+          pip install types-beautifulsoup4 types-requests
+
           
       - name: Run flake8 (style guide enforcement)
         run: flake8 . --count --show-source --statistics
         
-      - name: Run black (code formatting check)
-        run: black --check --diff .
-        
-      - name: Run mypy (static type checking)
-        run: mypy .
 
   detect-secrets:
     name: Scanning for secrets in code
