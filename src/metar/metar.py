@@ -1,66 +1,93 @@
-import discord
-from discord.ext import commands
-import requests
+import os
 import re
 import xml.etree.ElementTree as ET
-import os
 
-# Create the bot instance (assuming you've already done this)
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='/', intents=intents)
+import discord
+from discord.ext import commands
 
-# Regular expression for valid ICAO code (4 letters)
+# --- Configuration ---
 ICAO_REGEX = r"^[A-Z]{4}$"
+BOT_TOKEN = os.getenv("DISCORD_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("DISCORD_TOKEN not found in environment variables.")
 
-# Command to get METAR and TAF data
-@bot.command(name="weather", description="Получить METAR и TAF данные для указанного ICAO аэропорта с metartaf.ru")
-async def weather_command(ctx, icao: str):
-    """
-    Получает METAR и TAF данные для указанного ICAO аэропорта с metartaf.ru.
-    """
+# --- Bot Setup ---
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="/", intents=intents)
 
-    # Validate ICAO
-    if re.match(ICAO_REGEX, icao.upper()):
-        icao = icao.upper()  # Convert to uppercase for API
+
+# --- Events ---
+@bot.event
+async def on_ready():
+    """Prints a message when the bot connects to Discord."""
+    print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
+
+
+# --- Commands ---
+@bot.command(
+    name="weather",
+    description="Get METAR and TAF data for an ICAO airport",
+)
+async def weather_command(ctx: commands.Context, icao: str):
+    """Gets METAR and TAF data for a given ICAO airport from metartaf.ru.
+
+    Args:
+        ctx: The command context.
+        icao: The ICAO airport code (e.g., UUDD).
+    """
+    icao = icao.upper()
+
+    if not re.match(ICAO_REGEX, icao):
+        await ctx.send(
+            "Invalid ICAO code format. Please use a 4-letter code"
+        )
+        return
+
+    try:
+        url = f"http://metartaf.ru/{icao}.xml"
+        import requests  # Move import inside the try block
+
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+
+        xml_content = response.text
 
         try:
-            url = f"http://metartaf.ru/{icao}.xml"  # API URL
-            response = requests.get(url)
-            response.raise_for_status()  # Raises HTTPError for bad responses
-
-            xml_content = response.text  # XML DATA
-
-            # Parse the XML
             root = ET.fromstring(xml_content)
+        except ET.ParseError:
+            await ctx.send(
+                f"Error parsing XML data for {icao}. The server might be "
+                "down or the data is malformed."
+            )
+            return
 
-            # Extract data
-            metar = root.find('metar').text if root.find('metar') is not None else None
-            taf = root.find('taf').text if root.find('taf') is not None else None
+        metar_element = root.find("metar")
+        taf_element = root.find("taf")
+        metar = metar_element.text if metar_element is not None else None
+        taf = taf_element.text if taf_element is not None else None
 
-            # Format the output (only include fields if they exist)
-            formatted_message = f"**Weather Data for {icao}:**\n```\n"
+        embed = discord.Embed(
+            title=f"Weather Data for {icao}", color=discord.Color.blue()
+        )
+        if metar:
+            embed.add_field(name="METAR", value=metar, inline=False)
+        if taf:
+            embed.add_field(name="TAF", value=taf, inline=False)
 
-            if metar:
-                formatted_message += f"METAR: {metar}\n"
+        if not embed.fields:
+            await ctx.send(f"No METAR or TAF data found for {icao}.")
+        else:
+            await ctx.send(embed=embed)
 
-            if taf:
-                formatted_message += f"TAF: {taf}\n"
+    except requests.exceptions.RequestException as e:
+        await ctx.send(
+            f"Error fetching data for {icao}. Check the ICAO code, or the "
+            f"metartaf.ru service may be unavailable. Error: {e}"
+        )
+    except Exception as e:
+        await ctx.send(f"An unexpected error occurred for {icao}: {e}")
 
-            formatted_message += "```"
 
-            # Only send if there is actually content
-            if metar or taf:
-                await ctx.send(formatted_message)
-            else:
-                await ctx.send(f"No METAR or TAF data found for {icao}.") #If it's all null
-
-        except requests.exceptions.RequestException as e:
-            await ctx.send(f"Ошибка при получении данных для {icao}, возможно Вы ввели неверный ICAO")
-        except Exception as e:
-            await ctx.send(f"Произошла непредвиденная ошибка для {icao}: {e}")
-
-    else:
-        await ctx.send("Неверный формат ICAO кода. Пожалуйста, используйте 4-буквенный код (например, UUDD).")
-
-# Assuming you have a token
-bot.run(os.getenv('DISCORD_TOKEN'))
+# --- Run the bot ---
+bot.run(BOT_TOKEN)
