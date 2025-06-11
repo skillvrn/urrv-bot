@@ -14,8 +14,6 @@ POSITION_ANNOUNCEMENT_CHANNEL_ID: Optional[int] = int(
 XR_SITE_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL_SECONDS = 60
 BOT_COLOR = discord.Color.green()
-EMOJI_ID = 1382385111651320011  # Replace with your actual emoji ID
-EMOJI_NAME = "Aurora"  # Replace with your actual emoji name
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     raise ValueError("DISCORD_TOKEN not found in environment variables.")
@@ -69,10 +67,8 @@ async def get_positions_from_site(
 async def build_position_list_embed(
         positions_data: List[Dict[str, str]]) -> discord.Embed:
     """Builds the embed with formatted position data."""
-    emoji = f"<:{EMOJI_NAME}:{EMOJI_ID}>"  # Formatted emoji here
     embed = discord.Embed(
-        # Line 64 Added Emojis!
-        title=f"{emoji} **Active URRV FIR Positions** {emoji}",
+        title="✈ **Active URRV FIR Positions** ✈",
         color=BOT_COLOR,
         timestamp=datetime.datetime.now()
     )
