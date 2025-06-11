@@ -30,7 +30,10 @@ monitored_positions: Dict[str, datetime.datetime] = {}
 announcement_message: Optional[discord.Message] = None
 
 # --- Helper Functions ---
-async def get_positions_from_site(session: aiohttp.ClientSession) -> List[Dict[str, str]]:
+
+
+async def get_positions_from_site(
+        session: aiohttp.ClientSession) -> List[Dict[str, str]]:
     """Retrieves positions and their data."""
     try:
         async with session.get(XR_SITE_URL, timeout=10) as response:
@@ -49,7 +52,8 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> List[Dict[s
                         position = cells[0].text.strip()
                         if position.startswith("UR"):
                             data = cells[1].text.strip()
-                            positions_data.append({"position": position, "data": data})
+                            positions_data.append(
+                                {"position": position, "data": data})
                 return positions_data
             else:
                 print(f"HTTP Error: {response.status}")
@@ -61,11 +65,14 @@ async def get_positions_from_site(session: aiohttp.ClientSession) -> List[Dict[s
         print(f"Scraping Error: {e}")
         return []
 
-async def build_position_list_embed(positions_data: List[Dict[str, str]]) -> discord.Embed:
+
+async def build_position_list_embed(
+        positions_data: List[Dict[str, str]]) -> discord.Embed:
     """Builds the embed with formatted position data."""
     emoji = f"<:{EMOJI_NAME}:{EMOJI_ID}>"  # Formatted emoji here
     embed = discord.Embed(
-        title=f"{emoji} **Active URRV FIR Positions** {emoji}",  # Line 64 Added Emojis!
+        # Line 64 Added Emojis!
+        title=f"{emoji} **Active URRV FIR Positions** {emoji}",
         color=BOT_COLOR,
         timestamp=datetime.datetime.now()
     )
@@ -75,14 +82,16 @@ async def build_position_list_embed(positions_data: List[Dict[str, str]]) -> dis
             data = item['data']
 
             # Extract the VID and Frequency
-            match = re.search(r"(\d{6}).*?(\d+\.\d+)Mhz", data)  # Find 6 digits, then frequency before "Mhz"
+            # Find 6 digits, then frequency before "Mhz"
+            match = re.search(r"(\d{6}).*?(\d+\.\d+)Mhz", data)
 
             if match:
                 vid = match.group(1)
                 frequency = match.group(2)
                 value = f"{position} - {frequency} - VID({vid})"
             else:
-                value = f"{position} - Data not Parsed"  # If no match found in the string
+                # If no match found in the string
+                value = f"{position} - Data not Parsed"
 
             embed.add_field(name="", value=value, inline=False)  # Empty name!
     else:
@@ -91,6 +100,8 @@ async def build_position_list_embed(positions_data: List[Dict[str, str]]) -> dis
     return embed
 
 # --- Background Tasks ---
+
+
 @tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
 async def monitor_positions():
     """Monitors and updates the announcement."""
@@ -119,7 +130,8 @@ async def monitor_positions():
                     print(f"Edit Error: {e}")
             else:
                 try:
-                    announcement_message = await channel.send(embed=embed)  # Create the embed
+                    # Create the embed
+                    announcement_message = await channel.send(embed=embed)
                 except discord.errors.Forbidden:
                     print("Missing permissions to send message.")
                 except Exception as e:
@@ -130,11 +142,14 @@ async def monitor_positions():
     else:
         print("Channel ID not set, skipping.")
 
+
 @monitor_positions.before_loop
 async def before_monitor_positions():
     await bot.wait_until_ready()
 
 # --- Events ---
+
+
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user.name} ready!")
