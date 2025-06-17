@@ -3,16 +3,19 @@ version: '3.8'
 services:
   rostov_bot:
     image: skillvrn/rostov-bot:${VERSION}
+    restart: unless-stopped
     environment:
       DISCORD_ATO_NEWS_CHANNEL_ID: ${DISCORD_ATO_NEWS_CHANNEL_ID}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_WELCOME_CHANNEL_ID: ${DISCORD_WELCOME_CHANNEL_ID}
   metar_bot:
     image: skillvrn/metar-bot:${VERSION}
+    restart: unless-stopped
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
   atc_bot:
     image: skillvrn/atc-bot:${VERSION}
+    restart: unless-stopped
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID: ${DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID}
