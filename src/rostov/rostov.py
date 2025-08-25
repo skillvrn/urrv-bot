@@ -14,7 +14,7 @@ WELCOME_CHANNEL_ID: Optional[int] = int(
 ATO_NEWS_CHANNEL_ID: Optional[int] = int(
     os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID') or 0)
 ANNOUNCEMENT_EMOJI = "📢"
-ROLES_TO_MENTION = ["Курсанты"]
+ROLES_TO_MENTION = int(362332609981972490)
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
 FLIGHT_ANNOUNCE_IMAGE_URL = (
@@ -335,13 +335,11 @@ async def announce(
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
 
-@bot.command(name="flight_announce",
-             help="Создать объявление об учебных полетах с реакциями.")
+@bot.command(
+    name="flight_announce", help="Создать объявление об учебных полетах с реакциями."
+)
 @commands.has_permissions(administrator=True)
-async def flight_announce(
-        ctx: commands.Context,
-        flight_date: str,
-        flight_time: str):
+async def flight_announce(ctx: commands.Context, flight_date: str, flight_time: str):
     """Creates a flight announcement with reactions."""
     if ATO_NEWS_CHANNEL_ID:  # Check if channel ID is not None or 0
         channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
@@ -350,22 +348,16 @@ async def flight_announce(
             return
 
         try:
+            role = ctx.guild.get_role(ROLES_TO_MENTION)
             embed = discord.Embed(
                 title="✈️ Учебные полеты 🚀",
                 color=BOT_COLOR,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
             )
             embed.add_field(name="📅 Дата", value=flight_date, inline=False)
-            embed.add_field(
-                name="🕒 Время",
-                value=f"{flight_time} UTC",
-                inline=False
-            )
+            embed.add_field(name="🕒 Время", value=f"{flight_time} UTC", inline=False)
             embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
-            embed.add_field(
-                name="👥 Участники",
-                value=" ".join(ROLES_TO_MENTION),
-                inline=False)
+            embed.add_field(name="👥 Участники", value=role.mention, inline=False)
             embed.add_field(
                 name="ℹ️ Инструкция",
                 value=(
@@ -374,8 +366,7 @@ async def flight_announce(
                 ),
                 inline=False,
             )
-            embed.set_footer(
-                text="Нажмите на реакцию, чтобы сообщить об участии")
+            embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
             embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
             message = await channel.send(embed=embed)
@@ -388,8 +379,9 @@ async def flight_announce(
         except Exception as e:
             await ctx.send(f"Произошла ошибка при создании объявления: {e}")
     else:
-        await ctx.send("ATO_NEWS_CHANNEL_ID is not set, "
-                       "skipping flight announcement.")
+        await ctx.send(
+            "ATO_NEWS_CHANNEL_ID is not set, " "skipping flight announcement."
+        )
 
 
 # --- Модерация ---
@@ -624,3 +616,4 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
