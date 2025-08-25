@@ -336,7 +336,8 @@ async def announce(
 
 
 @bot.command(
-    name="flight_announce", help="Создать объявление об учебных полетах с реакциями."
+    name="flight_announce", help="Создать объявление об учебных "
+                                 "полетах с реакциями."
 )
 @commands.has_permissions(administrator=True)
 async def flight_announce(
@@ -394,7 +395,8 @@ async def flight_announce(
         )
 
 # --- Модерация ---
-@bot.command(name="kick", help="Выгнать участника с сервера.")
+@bot.command(name="kick", help="Выгнать "
+        "участника с сервера.")
 @commands.has_permissions(kick_members=True)
 async def kick(
         ctx: commands.Context,
@@ -625,6 +627,7 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
 
 
