@@ -339,7 +339,9 @@ async def announce(
     name="flight_announce", help="Создать объявление об учебных полетах с реакциями."
 )
 @commands.has_permissions(administrator=True)
-async def flight_announce(ctx: commands.Context, flight_date: str, flight_time: str):
+async def flight_announce(
+    ctx: commands.Context, flight_date: str, flight_time: str
+):
     """Creates a flight announcement with reactions."""
     if ATO_NEWS_CHANNEL_ID:  # Check if channel ID is not None or 0
         channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
@@ -355,9 +357,15 @@ async def flight_announce(ctx: commands.Context, flight_date: str, flight_time: 
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
             )
             embed.add_field(name="📅 Дата", value=flight_date, inline=False)
-            embed.add_field(name="🕒 Время", value=f"{flight_time} UTC", inline=False)
-            embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
-            embed.add_field(name="👥 Участники", value=role.mention, inline=False)
+            embed.add_field(
+                name="🕒 Время", value=f"{flight_time} UTC", inline=False
+            )
+            embed.add_field(
+                name="📍 Место", value="URMM IVAO", inline=False
+            )
+            embed.add_field(
+                name="👥 Участники", value=role.mention, inline=False
+            )
             embed.add_field(
                 name="ℹ️ Инструкция",
                 value=(
@@ -366,7 +374,9 @@ async def flight_announce(ctx: commands.Context, flight_date: str, flight_time: 
                 ),
                 inline=False,
             )
-            embed.set_footer(text="Нажмите на реакцию, чтобы сообщить об участии")
+            embed.set_footer(
+                text="Нажмите на реакцию, чтобы сообщить об участии"
+            )
             embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
             message = await channel.send(embed=embed)
@@ -380,9 +390,8 @@ async def flight_announce(ctx: commands.Context, flight_date: str, flight_time: 
             await ctx.send(f"Произошла ошибка при создании объявления: {e}")
     else:
         await ctx.send(
-            "ATO_NEWS_CHANNEL_ID is not set, " "skipping flight announcement."
+            "ATO_NEWS_CHANNEL_ID is not set, skipping flight announcement."
         )
-
 
 # --- Модерация ---
 @bot.command(name="kick", help="Выгнать участника с сервера.")
@@ -616,4 +625,5 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
