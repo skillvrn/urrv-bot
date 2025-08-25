@@ -334,10 +334,9 @@ async def announce(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
-
 @bot.command(
-    name="flight_announce", help="Создать объявление об учебных "
-                                 "полетах с реакциями."
+    name="flight_announce",
+    help="Создать объявление об учебных полетах с реакциями."
 )
 @commands.has_permissions(administrator=True)
 async def flight_announce(
@@ -627,6 +626,7 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
 
 
