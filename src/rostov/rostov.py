@@ -393,6 +393,18 @@ async def flight_announce(
             "ATO_NEWS_CHANNEL_ID is not set, skipping flight announcement."
         )
 
+
+# Добавить 2 пустые строки перед следующей функцией
+@bot.command(
+    name="kick",
+    help="Выгнать участника с сервера."
+)
+@commands.has_permissions(administrator=True)
+async def kick(ctx: commands.Context, member: discord.Member, *, reason=None):
+    """Kick a member from the server."""
+    await member.kick(reason=reason)
+    await ctx.send(f"Участник {member} был выгнан.")
+
 # --- Модерация ---
 @bot.command(name="kick", help="Выгнать "
         "участника с сервера.")
@@ -626,6 +638,7 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
 
 
