@@ -14,7 +14,8 @@ WELCOME_CHANNEL_ID: Optional[int] = int(
 ATO_NEWS_CHANNEL_ID: Optional[int] = int(
     os.getenv('DISCORD_ATO_NEWS_CHANNEL_ID') or 0)
 ANNOUNCEMENT_EMOJI = "📢"
-ROLES_TO_MENTION = int(362332609981972490)
+ROLES_TO_MENTION = ["Курсанты"]
+ROLE_IDS_TO_MENTION = [327112476728754177]  # ID роли "Курсанты"
 EXERCISE_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 BOT_COLOR = discord.Color.blue()
 FLIGHT_ANNOUNCE_IMAGE_URL = (
@@ -334,14 +335,13 @@ async def announce(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
-@bot.command(
-    name="flight_announce",
-    help="Создать объявление об учебных полетах с реакциями."
-)
+
+@bot.command(name="flight_announce", help="Создать объявление об учебных полетах с реакциями.")
 @commands.has_permissions(administrator=True)
 async def flight_announce(
-    ctx: commands.Context, flight_date: str, flight_time: str
-):
+        ctx: commands.Context,
+        flight_date: str,
+        flight_time: str):
     """Creates a flight announcement with reactions."""
     if ATO_NEWS_CHANNEL_ID:  # Check if channel ID is not None or 0
         channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
@@ -350,7 +350,18 @@ async def flight_announce(
             return
 
         try:
-            role = ctx.guild.get_role(ROLES_TO_MENTION)
+            # Создаем упоминания для ролей
+            role_mentions = []
+            for role_name in ROLES_TO_MENTION:
+                # Ищем роль по имени
+                role = discord.utils.get(ctx.guild.roles, name=role_name)
+                if role:
+                    role_mentions.append(role.mention)
+                else:
+                    # Если роль не найдена по имени, используем ID напрямую
+                    role_id = 327112476728754177  # ID роли "Курсанты"
+                    role_mentions.append(f"<@&{role_id}>")
+            
             embed = discord.Embed(
                 title="✈️ Учебные полеты 🚀",
                 color=BOT_COLOR,
@@ -358,14 +369,15 @@ async def flight_announce(
             )
             embed.add_field(name="📅 Дата", value=flight_date, inline=False)
             embed.add_field(
-                name="🕒 Время", value=f"{flight_time} UTC", inline=False
+                name="🕒 Время",
+                value=f"{flight_time} UTC",
+                inline=False
             )
+            embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
             embed.add_field(
-                name="📍 Место", value="URMM IVAO", inline=False
-            )
-            embed.add_field(
-                name="👥 Участники", value=role.mention, inline=False
-            )
+                name="👥 Участники",
+                value=" ".join(role_mentions),  # Используем упоминания ролей
+                inline=False)
             embed.add_field(
                 name="ℹ️ Инструкция",
                 value=(
@@ -375,8 +387,7 @@ async def flight_announce(
                 inline=False,
             )
             embed.set_footer(
-                text="Нажмите на реакцию, чтобы сообщить об участии"
-            )
+                text="Нажмите на реакцию, чтобы сообщить об участии")
             embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
             message = await channel.send(embed=embed)
@@ -389,25 +400,12 @@ async def flight_announce(
         except Exception as e:
             await ctx.send(f"Произошла ошибка при создании объявления: {e}")
     else:
-        await ctx.send(
-            "ATO_NEWS_CHANNEL_ID is not set, skipping flight announcement."
-        )
+        await ctx.send("ATO_NEWS_CHANNEL_ID is not set, "
+                       "skipping flight announcement.")
 
-
-# Добавить 2 пустые строки перед следующей функцией
-@bot.command(
-    name="kick",
-    help="Выгнать участника с сервера."
-)
-@commands.has_permissions(administrator=True)
-async def kick(ctx: commands.Context, member: discord.Member, *, reason=None):
-    """Kick a member from the server."""
-    await member.kick(reason=reason)
-    await ctx.send(f"Участник {member} был выгнан.")
 
 # --- Модерация ---
-@bot.command(name="kick", help="Выгнать "
-        "участника с сервера.")
+@bot.command(name="kick", help="Выгнать участника с сервера.")
 @commands.has_permissions(kick_members=True)
 async def kick(
         ctx: commands.Context,
@@ -638,9 +636,3 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
-
-
-
-
-
-
