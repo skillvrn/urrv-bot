@@ -301,7 +301,6 @@ async def say(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
-
 @bot.command(name="announce",
              help="Отправить объявление от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
@@ -640,5 +639,6 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
 
