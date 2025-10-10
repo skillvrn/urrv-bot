@@ -362,7 +362,7 @@ async def flight_announce(
                     # Если роль не найдена, используем ID напрямую
                     role_id = 327112476728754177  # ID роли "Курсанты"
                     role_mentions.append(f"<@&{role_id}>")
-            
+
             embed = discord.Embed(
                 title="✈️ Учебные полеты 🚀",
                 color=BOT_COLOR,
@@ -639,6 +639,7 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
 
 
 
