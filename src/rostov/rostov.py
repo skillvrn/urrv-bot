@@ -336,14 +336,17 @@ async def announce(
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
 
-@bot.command(name="flight_announce", help="Создать объявление об учебных полетах с реакциями.")
+@bot.command(
+    name="flight_announce",
+    help="Создать объявление об учебных полетах с реакциями."
+)
 @commands.has_permissions(administrator=True)
 async def flight_announce(
         ctx: commands.Context,
         flight_date: str,
         flight_time: str):
     """Creates a flight announcement with reactions."""
-    if ATO_NEWS_CHANNEL_ID:  # Check if channel ID is not None or 0
+    if ATO_NEWS_CHANNEL_ID:
         channel = bot.get_channel(ATO_NEWS_CHANNEL_ID)
         if not channel:
             await ctx.send("Ошибка: Канал #ato-news не найден.")
@@ -358,7 +361,7 @@ async def flight_announce(
                 if role:
                     role_mentions.append(role.mention)
                 else:
-                    # Если роль не найдена по имени, используем ID напрямую
+                    # Если роль не найдена, используем ID напрямую
                     role_id = 327112476728754177  # ID роли "Курсанты"
                     role_mentions.append(f"<@&{role_id}>")
             
@@ -376,8 +379,9 @@ async def flight_announce(
             embed.add_field(name="📍 Место", value="URMM IVAO", inline=False)
             embed.add_field(
                 name="👥 Участники",
-                value=" ".join(role_mentions),  # Используем упоминания ролей
-                inline=False)
+                value=" ".join(role_mentions),
+                inline=False
+            )
             embed.add_field(
                 name="ℹ️ Инструкция",
                 value=(
@@ -387,7 +391,8 @@ async def flight_announce(
                 inline=False,
             )
             embed.set_footer(
-                text="Нажмите на реакцию, чтобы сообщить об участии")
+                text="Нажмите на реакцию, чтобы сообщить об участии"
+            )
             embed.set_image(url=FLIGHT_ANNOUNCE_IMAGE_URL)
 
             message = await channel.send(embed=embed)
@@ -398,11 +403,11 @@ async def flight_announce(
         except discord.errors.Forbidden:
             await ctx.send("У меня нет прав.")
         except Exception as e:
-            await ctx.send(f"Произошла ошибка при создании объявления: {e}")
+            await ctx.send(f"Произошла ошибка: {e}")
     else:
-        await ctx.send("ATO_NEWS_CHANNEL_ID is not set, "
-                       "skipping flight announcement.")
-
+        await ctx.send(
+            "ATO_NEWS_CHANNEL_ID is not set, skipping flight announcement."
+        )
 
 # --- Модерация ---
 @bot.command(name="kick", help="Выгнать участника с сервера.")
@@ -636,3 +641,4 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
+
