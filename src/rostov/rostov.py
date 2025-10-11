@@ -301,6 +301,7 @@ async def say(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
+
 @bot.command(name="announce",
              help="Отправить объявление от имени бота в указанный канал.")
 @commands.has_permissions(administrator=True)
@@ -349,18 +350,14 @@ async def flight_announce(
         if not channel:
             await ctx.send("Ошибка: Канал #ato-news не найден.")
             return
-
         try:
-            # Создаем упоминания для ролей
             role_mentions = []
             for role_name in ROLES_TO_MENTION:
-                # Ищем роль по имени
                 role = discord.utils.get(ctx.guild.roles, name=role_name)
                 if role:
                     role_mentions.append(role.mention)
                 else:
-                    # Если роль не найдена, используем ID напрямую
-                    role_id = 327112476728754177  # ID роли "Курсанты"
+                    role_id = 327112476728754177
                     role_mentions.append(f"<@&{role_id}>")
 
             embed = discord.Embed(
@@ -435,14 +432,12 @@ async def kick(
             icon_url=icon_url,
         )
         await ctx.send(embed=embed)
-
     except discord.errors.Forbidden:
         await ctx.send("У меня нет прав для выгона этого участника.")
     except discord.errors.NotFound:
         await ctx.send("Участник не найден.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при кике: {e}")
-
 
 @bot.command(name="ban", help="Забанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
@@ -477,7 +472,6 @@ async def ban(
         await ctx.send("Участник не найден.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при бане: {e}")
-
 
 @bot.command(name="unban", help="Разбанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
@@ -576,7 +570,6 @@ async def mute(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при муте: {e}")
 
-
 @bot.command(name="unmute", help="Снять мут с участника.")
 @commands.has_permissions(manage_roles=True)
 async def unmute(
@@ -617,7 +610,6 @@ async def unmute(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при снятии мута: {e}")
 
-
 @bot.event
 async def on_message(message: discord.Message):
     """Handles messages, important for command processing."""
@@ -639,7 +631,3 @@ def parse_duration(duration: str) -> int | None:
 
 # --- Запуск бота ---
 bot.run(BOT_TOKEN)
-
-
-
-
