@@ -335,6 +335,7 @@ async def announce(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при отправке сообщения: {e}")
 
+
 @bot.command(
     name="flight_announce",
     help="Создать объявление об учебных полетах с реакциями."
@@ -405,6 +406,8 @@ async def flight_announce(
         )
 
 # --- Модерация ---
+
+
 @bot.command(name="kick", help="Выгнать участника с сервера.")
 @commands.has_permissions(kick_members=True)
 async def kick(
@@ -439,6 +442,7 @@ async def kick(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при кике: {e}")
 
+
 @bot.command(name="ban", help="Забанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
 async def ban(
@@ -472,6 +476,7 @@ async def ban(
         await ctx.send("Участник не найден.")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при бане: {e}")
+
 
 @bot.command(name="unban", help="Разбанить участника на сервере.")
 @commands.has_permissions(ban_members=True)
@@ -570,6 +575,7 @@ async def mute(
     except Exception as e:
         await ctx.send(f"Произошла ошибка при муте: {e}")
 
+
 @bot.command(name="unmute", help="Снять мут с участника.")
 @commands.has_permissions(manage_roles=True)
 async def unmute(
@@ -609,6 +615,7 @@ async def unmute(
         await ctx.send("У меня нет прав")
     except Exception as e:
         await ctx.send(f"Произошла ошибка при снятии мута: {e}")
+
 
 @bot.event
 async def on_message(message: discord.Message):
