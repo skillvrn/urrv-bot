@@ -10,7 +10,7 @@ import re
 TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID') or 0)
 XR_URL = "https://xr.ivao.aero/"
-CHECK_INTERVAL = 60
+CHECK_INTERVAL = 300
 
 # --- Bot Setup ---
 intents = discord.Intents.default()
