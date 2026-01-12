@@ -4,152 +4,150 @@ import discord
 from discord.ext import commands, tasks
 import aiohttp
 from bs4 import BeautifulSoup
-from typing import List, Dict, Optional
-import re  # Импортируем модуль re
+import re
 
-# --- Configuration ---
-BOT_PREFIX = "!"
-POSITION_ANNOUNCEMENT_CHANNEL_ID: Optional[int] = int(
-    os.getenv('DISCORD_POSITION_ANNOUNCEMENT_CHANNEL_ID') or 0)
-XR_SITE_URL = "https://xr.ivao.aero/"
-CHECK_INTERVAL_SECONDS = 60
-BOT_COLOR = discord.Color.green()
+# --- Config ---
 TOKEN = os.getenv("DISCORD_TOKEN")
-if not TOKEN:
-    raise ValueError("DISCORD_TOKEN not found in environment variables.")
+CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID') or 0)
+XR_URL = "https://xr.ivao.aero/"
+CHECK_INTERVAL = 300
 
-# --- Bot Initialization ---
+# --- Bot Setup ---
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix=BOT_PREFIX, intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- Global Variables ---
-monitored_positions: Dict[str, datetime.datetime] = {}
-announcement_message: Optional[discord.Message] = None
-
-# --- Helper Functions ---
+# --- Data ---
+current_positions = set()
 
 
-async def get_positions_from_site(
-        session: aiohttp.ClientSession) -> List[Dict[str, str]]:
-    """Retrieves positions and their data."""
+# --- Functions ---
+async def get_positions():
+    """Get positions from IVAO site."""
     try:
-        async with session.get(XR_SITE_URL, timeout=10) as response:
-            if response.status == 200:
-                html = await response.text()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(XR_URL, timeout=10) as resp:
+                if resp.status != 200:
+                    return []
+
+                html = await resp.text()
                 soup = BeautifulSoup(html, "html.parser")
                 table = soup.find("table")
                 if not table:
-                    print("Table not found!")
                     return []
 
-                positions_data: List[Dict[str, str]] = []
+                positions = []
                 for row in table.find_all("tr")[1:]:
                     cells = row.find_all("td")
                     if cells and len(cells) >= 2:
-                        position = cells[0].text.strip()
-                        if position.startswith("UR"):
+                        pos = cells[0].text.strip()
+                        if pos.startswith("UR"):
                             data = cells[1].text.strip()
-                            positions_data.append(
-                                {"position": position, "data": data})
-                return positions_data
-            else:
-                print(f"HTTP Error: {response.status}")
-                return []
-    except aiohttp.ClientError as e:
-        print(f"Connection Error: {e}")
-        return []
-    except Exception as e:
-        print(f"Scraping Error: {e}")
+                            positions.append(
+                                {"position": pos, "data": data}
+                            )
+                return positions
+    except Exception:
         return []
 
 
-async def build_position_list_embed(
-        positions_data: List[Dict[str, str]]) -> discord.Embed:
-    """Builds the embed with formatted position data."""
+def get_info(data):
+    """Extract VID and frequency."""
+    match = re.search(r"(\d{6}).*?(\d+\.\d+)Mhz", data)
+    if match:
+        return {"vid": match.group(1), "frequency": match.group(2)}
+    return {"vid": "Unknown", "frequency": "Unknown"}
+
+
+async def send_alert(channel, pos_name, info, is_open=True):
+    """Send position alert."""
+    title = "🚨 NEW POSITION OPENED!" if is_open else "🔴 POSITION CLOSED"
+    color = discord.Color.green() if is_open else discord.Color.red()
+
     embed = discord.Embed(
-        title="✈ **Active URRV FIR Positions** ✈",
-        color=BOT_COLOR,
+        title=title,
+        color=color,
         timestamp=datetime.datetime.now()
     )
-    if positions_data:
-        for item in positions_data:
-            position = item['position']
-            data = item['data']
 
-            # Extract the VID and Frequency
-            # Find 6 digits, then frequency before "Mhz"
-            match = re.search(r"(\d{6}).*?(\d+\.\d+)Mhz", data)
-
-            if match:
-                vid = match.group(1)
-                frequency = match.group(2)
-                value = f"{position} - {frequency} - VID({vid})"
-            else:
-                # If no match found in the string
-                value = f"{position} - Data not Parsed"
-
-            embed.add_field(name="", value=value, inline=False)  # Empty name!
+    if is_open:
+        embed.add_field(
+            name="📍 Position",
+            value=f"```{pos_name}```",
+            inline=False
+        )
+        embed.add_field(
+            name="📡 Frequency",
+            value=f"```{info['frequency']}```",
+            inline=True
+        )
+        embed.add_field(
+            name="👨‍✈️ Controller VID",
+            value=f"```{info['vid']}```",
+            inline=True
+        )
+        embed.add_field(
+            name="⏰ Opened",
+            value=f"<t:{int(datetime.datetime.now().timestamp())}:T>",
+            inline=False
+        )
     else:
-        embed.description = "😴 No active URRV FIR positions found."
-    embed.set_footer(text="Updated every minute")
-    return embed
+        embed.description = f"Position **{pos_name}** is no longer active."
 
-# --- Background Tasks ---
+    # Add footer
+    embed.set_footer(text="URRV FIR Positions Monitoring System")
 
-
-@tasks.loop(seconds=CHECK_INTERVAL_SECONDS)
-async def monitor_positions():
-    """Monitors and updates the announcement."""
-    global announcement_message
-    if POSITION_ANNOUNCEMENT_CHANNEL_ID:
-        channel = bot.get_channel(POSITION_ANNOUNCEMENT_CHANNEL_ID)
-        if not channel:
-            print("Channel not found!")
-            return
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                current_positions_data = await get_positions_from_site(session)
-
-            embed = await build_position_list_embed(current_positions_data)
-
-            if announcement_message:
-                try:
-                    await announcement_message.edit(embed=embed)  # Edit embed
-                except discord.errors.NotFound:
-                    print("Message not found, creating a new one.")
-                    announcement_message = await channel.send(embed=embed)
-                except discord.errors.Forbidden:
-                    print("Missing permissions to edit message.")
-                except Exception as e:
-                    print(f"Edit Error: {e}")
-            else:
-                try:
-                    # Create the embed
-                    announcement_message = await channel.send(embed=embed)
-                except discord.errors.Forbidden:
-                    print("Missing permissions to send message.")
-                except Exception as e:
-                    print(f"Send Error: {e}")
-
-        except Exception as e:
-            print(f"Task Error: {e}")
-    else:
-        print("Channel ID not set, skipping.")
+    await channel.send(embed=embed)
 
 
-@monitor_positions.before_loop
-async def before_monitor_positions():
+# --- Task ---
+@tasks.loop(seconds=CHECK_INTERVAL)
+async def check_positions():
+    """Check for position changes."""
+    if not CHANNEL_ID:
+        return
+
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+
+    positions_data = await get_positions()
+    new_positions = {p["position"] for p in positions_data}
+
+    # Find changes
+    opened = new_positions - current_positions
+    closed = current_positions - new_positions
+
+    # Send alerts
+    for pos in opened:
+        pos_data = next(
+            (p for p in positions_data if p["position"] == pos),
+            None
+        )
+        if pos_data:
+            info = get_info(pos_data["data"])
+            await send_alert(channel, pos, info, is_open=True)
+
+    for pos in closed:
+        await send_alert(channel, pos, {}, is_open=False)
+
+    # Update current positions
+    current_positions.clear()
+    current_positions.update(new_positions)
+
+
+@check_positions.before_loop
+async def before_check():
     await bot.wait_until_ready()
 
+
 # --- Events ---
-
-
 @bot.event
 async def on_ready():
-    print(f"Bot {bot.user.name} ready!")
-    monitor_positions.start()
+    print(f"Bot {bot.user.name} online")
+    check_positions.start()
 
-# --- Run the Bot ---
-bot.run(TOKEN)
+
+# --- Run ---
+if __name__ == "__main__":
+    bot.run(TOKEN)
