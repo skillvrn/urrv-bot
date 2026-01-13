@@ -7,10 +7,12 @@ from bs4 import BeautifulSoup
 import re
 
 # --- Config ---
-TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID') or 0)
 XR_URL = "https://xr.ivao.aero/"
 CHECK_INTERVAL = 300
+TOKEN = os.getenv("DISCORD_TOKEN")
+if not TOKEN:
+    raise ValueError("DISCORD_TOKEN not found in environment variables.")
 
 # --- Bot Setup ---
 intents = discord.Intents.default()
@@ -149,5 +151,4 @@ async def on_ready():
 
 
 # --- Run ---
-if __name__ == "__main__":
-    bot.run(TOKEN)
+bot.run(TOKEN)
